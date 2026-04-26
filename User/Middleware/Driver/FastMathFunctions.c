@@ -2,6 +2,32 @@
 
 extern const float sinTable_f32[]; // 定义在下面
 
+// 正弦波结构体（你的代码保留，无需修改）
+SineGen_t sine = {
+    .phase = 0.0f,
+    .amplitude = 1000.0f,   // 幅值
+    .offset = 0.0f,
+    .freq = 0.04f           // 1Hz正弦波（更顺滑，可改0.5/2Hz）
+};
+
+// 【顺滑关键】固定1ms调用一次（定时器中断中调用）
+void SineGen_Update(void)
+{
+    const float dt = 0.001f;  // 中断1ms一次，dt绝对精准
+    float step = 2 * PI * sine.freq * dt;
+    sine.phase += step;
+
+    // 相位限幅（更精准）
+    if(sine.phase >= 2*PI)
+        sine.phase -= 2*PI;
+}
+
+// 【顺滑关键】获取当前正弦值（主函数只读取，不计算）
+float ControlLoop(void)
+{
+    return sine.offset + sine.amplitude * fast_sin(sine.phase);
+}
+
 float fast_sin(float radians)
 {
     float sinVal, fract, in; /* Temporary input, output variables */
@@ -316,3 +342,6 @@ const float sinTable_f32[FAST_MATH_TABLE_SIZE + 1] = {
     -0.17096189f, -0.15885814f, -0.14673047f, -0.13458071f, -0.12241068f,
     -0.11022221f, -0.09801714f, -0.08579731f, -0.07356456f, -0.06132074f,
     -0.04906767f, -0.03680722f, -0.02454123f, -0.01227154f, -0.00000000f};
+
+
+

@@ -8,9 +8,13 @@
 #include  "drv_tim.h"
 #include  "drv_can.h"
 #include  "drv_usart.h"
+#include  "FastMathFunctions.h"
+#include  "task_it.h"
+#include  "dvc_dji_motor.h"
 
 //测试模式
 #define vofa_debug 1
+#define dji_motor_debug 1
 
 void debug_init(void);
 void debug_run(void);

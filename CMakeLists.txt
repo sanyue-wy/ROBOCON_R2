@@ -40,7 +40,12 @@ add_executable(${CMAKE_PROJECT_NAME}
         User/Middleware/Algorithm/alg_pid.c
         User/Device/dev_vofa/dev_vofa.c
         User/APP/debug.h
-        User/APP/debug.c)
+        User/APP/debug.c
+        User/Device/dev_dji_motor/dvc_dji_motor.c
+        User/Device/dev_dji_motor/dvc_dji_motor_date.h
+        User/APP/Chassis.c
+        User/APP/task_it.h
+        User/APP/task_it.c)
 
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
