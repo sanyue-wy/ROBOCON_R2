@@ -41,9 +41,11 @@ void debug_run(void)
 {
 
 #if vofa_debug==1
-   float  target=0;
-    target=ControlLoop();
-    DJ_SetSpeed(&DJ_Motor3508[0],target);
+
+   // float  target=0;
+   //   target=ControlLoop();
+   //   DJ_SetSpeed(&DJ_Motor3508[0],target);
+    uart_pid_to_pid_update(&DJ_Motor3508[0].PID_Speed.Kp,&DJ_Motor3508[0].PID_Speed.Ki,&DJ_Motor3508[0].PID_Speed.Kd,&DJ_Motor3508[0].setSpeed,0);
     float a[5]={DJ_Motor3508[0].PID_Speed.Kp,DJ_Motor3508[0].PID_Speed.Ki,DJ_Motor3508[0].PID_Speed.Ki,DJ_Motor3508[0].setSpeed,DJ_Motor3508[0].speed};
 vofa_FloatSend(a,5);
 

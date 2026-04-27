@@ -32,7 +32,7 @@ typedef struct{
 }pid_para_t;
 
 
-
+void uart_pid_to_pid_update(float * kp,float * ki,float * kd,float * target,uint8_t mode);
 float Get_Data(void);
 void USART_PID_Adjust(uint8_t Motor_n);
 void vofa_FloatSend(float * date,uint16_t length);

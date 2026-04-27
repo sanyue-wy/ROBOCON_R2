@@ -4,7 +4,7 @@
 #include "drv_usart.h"
 
 
-static pid_para_t para;
+static pid_para_t para={0};
 
 uint8_t RxBuffer[1];//串口接收缓冲
 uint16_t RxLine;//指令长度初始值设置为零
@@ -35,32 +35,31 @@ void firewater_displaydata(float position_target,float position_actual,float pos
  *mode为0时测速度环
  *
  */
-void uart_pid_to_pid_update(float kp,float ki,float kd,float target,uint8_t mode)
+void uart_pid_to_pid_update(float * kp,float * ki,float * kd,float * target,uint8_t mode)
 {
     if (mode==0)
     {
-        if (para.speed_kp!=kp)
-            kp=para.speed_kp;
-        if (para.speed_ki!=ki)
-            ki=para.speed_ki;
-        if (para.speed_kd!=kd)
-            kd=para.speed_kd;
-        if (para.speed_target!=target)
-            target=para.speed_target;
+        if (*kp!=para.speed_kp)
+            *kp=para.speed_kp;
+        if (*ki!=para.speed_ki)
+            *ki=para.speed_ki;
+        if (*kd!=para.speed_kd)
+            *kd=para.speed_kd;
+        if (*target!=para.speed_target)
+            *target=para.speed_target;
     }
 else
 {
-    if (para.position_kp!=kp)
-        kp=para.position_kp;
-    if (para.position_ki!=ki)
-        ki=para.position_ki;
-    if (para.position_kd!=kd)
-        kd=para.position_kd;
-    if (para.angle_target!=target)
-        target=para.angle_target;
+    if (*kp!=para.position_kp)
+        *kp=para.position_kp;
+    if (*ki!=para.position_ki)
+        *ki=para.position_ki;
+    if (*kd!=para.position_kd)
+        *kd=para.position_kd;
+    if (*target!=para.angle_target)
+        *target=para.angle_target;
 }
 }
-
 
 
 
@@ -273,8 +272,8 @@ void USART_PID_Adjust(uint8_t Motor_n)
             }
             else if(strcmp(cmd_buff, "Spe") == 0) //目标速度
             {
-                para.speed_target = data_Get*100;
-                UART_Print("Set Spe (speed_target) to %.2f\r\n", data_Get*100);
+                para.speed_target = data_Get;
+                UART_Print("Set Spe (speed_target) to %.2f\r\n", data_Get);
             }
             else if(strcmp(cmd_buff, "Ang") == 0) //目标速度
             {
