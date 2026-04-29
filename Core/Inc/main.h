@@ -57,6 +57,28 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define HALL_SENSOR_PIN2_Pin GPIO_PIN_7
+#define HALL_SENSOR_PIN2_GPIO_Port GPIOI
+#define HALL_SENSOR_PIN1_Pin GPIO_PIN_6
+#define HALL_SENSOR_PIN1_GPIO_Port GPIOI
+#define LASER_Pin GPIO_PIN_8
+#define LASER_GPIO_Port GPIOC
+#define RSTN_IST8310_Pin GPIO_PIN_6
+#define RSTN_IST8310_GPIO_Port GPIOG
+#define DRDY_IST8310_Pin GPIO_PIN_3
+#define DRDY_IST8310_GPIO_Port GPIOG
+#define KEY_Pin GPIO_PIN_0
+#define KEY_GPIO_Port GPIOA
+#define CS1_ACCEL_Pin GPIO_PIN_4
+#define CS1_ACCEL_GPIO_Port GPIOA
+#define INT1_ACCEL_Pin GPIO_PIN_4
+#define INT1_ACCEL_GPIO_Port GPIOC
+#define INT1_GYRO_Pin GPIO_PIN_5
+#define INT1_GYRO_GPIO_Port GPIOC
+#define SPI2_CS_Pin GPIO_PIN_12
+#define SPI2_CS_GPIO_Port GPIOB
+#define CS1_GYRO_Pin GPIO_PIN_0
+#define CS1_GYRO_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
