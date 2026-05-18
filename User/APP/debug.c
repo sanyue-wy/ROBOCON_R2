@@ -19,10 +19,36 @@
 
 #endif
 
+#if lift_debug==1
+
+#endif
+
+#if remote_debug==1
+
+#endif
+
+
 void debug_init(void)
 {
     AttachInterrupt_TIM(&htim7, MM_TIM_Callback);
     HAL_TIM_Base_Start_IT(&htim7);
+
+
+#if lift_debug==1
+
+car_lift_init();
+    AttachInterrupt_UART_DMA(&huart3,Rx_buf,64,Remote_callback);
+#endif
+
+
+#if remote_debug==1
+    AttachInterrupt_UART_DMA(&huart1,DataBuff,200,Vofa_Callback);
+    AttachInterrupt_UART_DMA(&huart3,Rx_buf,64,Remote_callback);
+
+
+
+#endif
+
 
 #if imu_debug==1
     DWT_Init(168);
@@ -52,6 +78,22 @@ void debug_init(void)
 
 void debug_run(void)
 {
+#if lift_debug==1
+if (Remote_control_FS.SWA > 1000)
+  car_lift();
+   if (Remote_control_FS.SWA>0&&Remote_control_FS.SWA<1000)
+       car_down();
+
+
+
+#endif
+
+#if remote_debug==1
+
+    float a[4]={Remote_control_FS.Left_X,Remote_control_FS.Left_Y,Remote_control_FS.Right_X,Remote_control_FS.Right_Y};
+    vofa_FloatSend(a,4);
+
+#endif
 
 #if imu_debug==1
 INS_Task();

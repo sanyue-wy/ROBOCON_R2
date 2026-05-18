@@ -15,11 +15,16 @@
 #include "spi.h"
 #include  "bsp_dwt.h"
 #include "BMI088driver.h"
+#include  "car_lifting.h"
+#include  "dvc_remote.h"
 
 //测试模式
 #define vofa_debug 0
 #define dji_motor_debug 0
-#define imu_debug 1
+#define imu_debug 0
+#define lift_debug 1
+#define remote_debug 0
+
 
 void debug_init(void);
 void debug_run(void);

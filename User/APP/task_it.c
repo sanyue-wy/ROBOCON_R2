@@ -15,7 +15,7 @@ void MM_TIM_Callback(void)
 
         count = 0;
     }
-    SineGen_Update();
+   // SineGen_Update();
 }
 void TASK_1MS_TIM_callback(void)
 {
