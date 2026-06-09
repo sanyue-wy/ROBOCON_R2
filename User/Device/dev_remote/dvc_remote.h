@@ -21,7 +21,6 @@ typedef struct{       //低位~中值~高位
 }Remote_control_struct;
 
 extern uint8_t Rx_buf[64];
-extern uint16_t sbus_channels[16];
 extern Remote_control_struct Remote_control_FS;
 //函数定义
 

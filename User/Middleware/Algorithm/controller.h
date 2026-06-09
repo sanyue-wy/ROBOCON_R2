@@ -1,13 +1,15 @@
 /**
   ******************************************************************************
-  * @file	 controller.h
+  * @file    controller.h
   * @author  Wang Hongxi
   * @author  Zhang Hongyu (fuzzy pid)
-  * @version V1.1.3
+  * @version V2.0.0
   * @date    2021/7/3
-  * @brief   
+  * @brief   统一PID控制器库 - 合并基础PID和高级PID
   ******************************************************************************
-  * @attention 
+  * @attention
+  *
+  * 包含: 基础PID、TDPID、快速PID、阻抗控制、高级PID(模糊/OLS)、前馈、扰动观测器、跟踪微分器
   *
   ******************************************************************************
   */
@@ -36,7 +38,94 @@
 #endif
 #endif
 
-/******************************** FUZZY PID **********************************/
+// 限幅宏 (原 alg_pid.h)
+#define LIHT_MIN_MAX(x, min, max) (x) = (((x) <= (min)) ? (min) : (((x) >= (max)) ? (max) : (x)))
+
+/****************************** 基础PID控制器 ********************************/
+// 基础PID结构体 (原 alg_pid.h)
+typedef struct
+{
+    float Kp;
+    float Ki;
+    float Kd;
+    float max_out;  // 最大输出
+    float max_iout; // 最大积分输出
+
+    float err[2]; // 误差及上一次误差
+    float set;
+    float fdb;
+
+    float out;
+    float Pout;
+    float Iout;
+    float Dout;
+} PID_t; // 基础PID
+
+void PID_Init(PID_t *pid, float kp, float ki, float kd, float max_out, float max_iout);
+float PID_Calc(PID_t *pid, float fdb, float set);
+
+// 跟踪微分器PID结构体 (原 alg_pid.h)
+typedef struct
+{
+    float Kp;
+    float Ki;
+    float Kd;
+    float max_out;  // 最大输出
+    float max_iout; // 最大积分输出
+
+    float err[2]; // 误差及上一次误差
+    float set;
+    float fdb;
+
+    float out;
+    float Pout;
+    float Iout;
+    float Dout;
+
+    float h;  // 快速跟踪因子
+    float r;  // 系统调用步长
+    float x1; // 输入
+    float x2; // 输入的微分
+} TDPID_t;    // TDPID
+void TDPID_Init(TDPID_t *TDpid, float kp, float ki, float kd, float max_out, float max_iout, float h, float r);
+float TDPID_Calc(TDPID_t *TDpid, float fdb, float set);
+
+// 快速增量式PID结构体 (原 alg_pid.h)
+typedef struct
+{
+    float A0;       /**< The derived gain, A0 = Kp + Ki + Kd . */
+    float A1;       /**< The derived gain, A1 = -Kp - 2Kd. */
+    float A2;       /**< The derived gain, A2 = Kd . */
+    float state[2]; /**< The state array of length 3. */
+    float Kp;       /**< The proportional gain. */
+    float Ki;       /**< The integral gain. */
+    float Kd;       /**< The derivative gain. */
+    float MaxOut;   /**< The Max output. */
+    float out;
+} fastPID_t; // 快速计算PID
+
+void FastPID_Init(fastPID_t *S, float kp, float ki, float kd, float maxout);
+float FastPID_Calc(fastPID_t *S, float in);
+
+// 阻抗控制结构体 (原 alg_pid.h)
+typedef struct
+{
+    float Kp;
+    float Kd;
+    float dp;
+    float dv;
+    float t;
+    float out;
+} Impedance_t; // 阻抗控制
+
+/* 阻抗控制计算 */
+static inline float Impedance_Calc(Impedance_t *imp)
+{
+    imp->out = imp->Kp * imp->dp + imp->Kd * imp->dv + imp->t;
+    return imp->out;
+}
+
+/******************************* 高级PID控制器 ********************************/
 #define NB -3
 #define NM -2
 #define NS -1
@@ -45,7 +134,7 @@
 #define PM 2
 #define PB 3
 
-typedef __packed struct
+typedef struct __packed
 {
     float KpFuzzy;
     float KiFuzzy;
@@ -95,13 +184,13 @@ typedef enum errorType_e
     Motor_Blocked = 0x01U
 } ErrorType_e;
 
-typedef __packed struct
+typedef struct __packed
 {
     uint64_t ERRORCount;
     ErrorType_e ERRORType;
 } PID_ErrorHandler_t;
 
-typedef __packed struct pid_t
+typedef struct __packed ctrl_pid_t
 {
     float Ref;
     float Kp;
@@ -144,12 +233,12 @@ typedef __packed struct pid_t
 
     PID_ErrorHandler_t ERRORHandler;
 
-    void (*User_Func1_f)(struct pid_t *pid);
-    void (*User_Func2_f)(struct pid_t *pid);
-} PID_t;
+    void (*User_Func1_f)(struct ctrl_pid_t *pid);
+    void (*User_Func2_f)(struct ctrl_pid_t *pid);
+} Ctrl_PID_t;
 
-void PID_Init_NEW(
-    PID_t *pid,
+void Ctrl_PID_Init(
+    Ctrl_PID_t *pid,
     float max_out,
     float intergral_limit,
     float deadband,
@@ -167,10 +256,10 @@ void PID_Init_NEW(
     uint16_t ols_order,
 
     uint8_t improve);
-float PID_Calculate(PID_t *pid, float measure, float ref);
+float Ctrl_PID_Calculate(Ctrl_PID_t *pid, float measure, float ref);
 
 /*************************** FEEDFORWARD CONTROL *****************************/
-typedef __packed struct
+typedef struct __packed
 {
     float c[3]; // G(s) = 1/(c2s^2 + c1s + c0)
 
@@ -209,7 +298,7 @@ void Feedforward_Init(
 float Feedforward_Calculate(Feedforward_t *ffc, float ref);
 
 /************************* LINEAR DISTURBANCE OBSERVER *************************/
-typedef __packed struct
+typedef struct __packed
 {
     float c[3]; // G(s) = 1/(c2s^2 + c1s + c0)
 
@@ -252,7 +341,7 @@ void LDOB_Init(
 float LDOB_Calculate(LDOB_t *ldob, float measure, float u);
 
 /*************************** Tracking Differentiator ***************************/
-typedef __packed struct
+typedef struct __packed
 {
     float Input;
 

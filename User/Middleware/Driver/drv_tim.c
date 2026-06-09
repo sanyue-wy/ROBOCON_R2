@@ -14,7 +14,9 @@ static TIM_Interrupt_t *TIM_ItSource_Array; // TIM中断回调函数结构体数
  */
 void AttachInterrupt_TIM(TIM_HandleTypeDef *htim, void (*TIM_Callback)(void))
 {
-    TIM_ItSource_Array = (TIM_Interrupt_t *)realloc(TIM_ItSource_Array, (TIM_Function_Count + 1) * sizeof(TIM_Interrupt_t));
+    TIM_Interrupt_t *tmp = (TIM_Interrupt_t *)realloc(TIM_ItSource_Array, (TIM_Function_Count + 1) * sizeof(TIM_Interrupt_t));
+    if (tmp == NULL) return; // 分配失败,放弃注册
+    TIM_ItSource_Array = tmp;
     TIM_ItSource_Array[TIM_Function_Count].htim = htim;
     TIM_ItSource_Array[TIM_Function_Count].TIM_Callback = TIM_Callback;
     TIM_Function_Count++;

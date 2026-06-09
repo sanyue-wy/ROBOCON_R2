@@ -23,10 +23,12 @@
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
+#include "usb_device.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "app_task.h"
 #include "debug.h"
 /* USER CODE END Includes */
 
@@ -99,8 +101,10 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM2_Init();
   MX_TIM10_Init();
+  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
-debug_init();
+ // App_Task_Init();
+ debug_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -110,6 +114,7 @@ debug_init();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    //App_Task_Run();
     debug_run();
   }
   /* USER CODE END 3 */
@@ -132,15 +137,14 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 6;
   RCC_OscInitStruct.PLL.PLLN = 168;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 4;
+  RCC_OscInitStruct.PLL.PLLQ = 7;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -172,10 +176,14 @@ void SystemClock_Config(void)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
+
+  // 错误指示：快速闪烁LED (PH10)
   while (1)
   {
+    HAL_GPIO_TogglePin(GPIOH, GPIO_PIN_10);
+    // 约100ms延时 (168MHz下)
+    for (volatile uint32_t i = 0; i < 840000; i++) {}
   }
   /* USER CODE END Error_Handler_Debug */
 }

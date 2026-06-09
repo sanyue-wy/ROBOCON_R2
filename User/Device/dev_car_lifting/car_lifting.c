@@ -3,13 +3,13 @@
 //
 
 #include "car_lifting.h"
-void car_lift(void)
+void car_lift_up(void)
 {
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9,GPIO_PIN_SET);
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11,GPIO_PIN_SET);
 
 }
-void car_down(void)
+void car_lift_down(void)
 {
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9,GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11,GPIO_PIN_RESET);

@@ -27,12 +27,17 @@
 
 #endif
 
+#if USB_debug==1
+
+#endif
 
 void debug_init(void)
 {
     AttachInterrupt_TIM(&htim7, MM_TIM_Callback);
     HAL_TIM_Base_Start_IT(&htim7);
+#if USB_debug==1
 
+#endif
 
 #if lift_debug==1
 
@@ -76,13 +81,22 @@ car_lift_init();
 
 }
 
+
+
+//死循环内运行的
+
 void debug_run(void)
 {
+
+#if USB_debug==1
+CDC_Transmit_FS("hello world\n",11);
+    HAL_Delay(1000);
+#endif
 #if lift_debug==1
 if (Remote_control_FS.SWA > 1000)
-  car_lift();
+  car_lift_up();
    if (Remote_control_FS.SWA>0&&Remote_control_FS.SWA<1000)
-       car_down();
+       car_lift_down();
 
 
 

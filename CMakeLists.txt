@@ -39,12 +39,12 @@ add_executable(${CMAKE_PROJECT_NAME}
         User/Middleware/Driver/drv_tim.c
         User/Middleware/Driver/drv_usart.c
         User/Middleware/Driver/FastMathFunctions.c
-        User/Middleware/Algorithm/alg_pid.c
         User/Device/dev_vofa/dev_vofa.c
         User/APP/debug.h
         User/APP/debug.c
+        User/APP/app_task.h
+        User/APP/app_task.c
         User/Device/dev_dji_motor/dvc_dji_motor.c
-        User/Device/dev_dji_motor/dvc_dji_motor_date.h
         User/APP/Chassis.c
         User/APP/task_it.h
         User/APP/task_it.c
@@ -65,6 +65,9 @@ add_executable(${CMAKE_PROJECT_NAME}
         User/Device/dev_car_lifting/car_lifting.c
         User/Device/dev_remote/dvc_remote.c
         User/Device/dev_remote/dvc_remote.h
+        User/Middleware/Driver/drv_usb.h
+        User/Middleware/Driver/drv_usb.c
+        User/Device/dev_pc/dev_pc.c
 )
 
 # Add STM32CubeMX generated sources
@@ -92,6 +95,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         User/Device/dev_imu
         User/Device/dev_car_lifting
         User/Device/dev_remote
+        User/Device/dev_pc
 )
 
 # Add project symbols (macros)

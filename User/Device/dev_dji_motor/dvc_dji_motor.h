@@ -9,7 +9,7 @@ extern "C"
 #endif
 
 #include "drv_can.h"
-#include "alg_pid.h"
+#include "controller.h"
 
 #define PID 1
 #define IMPEDANCE 0
@@ -38,6 +38,8 @@ extern "C"
     /* 电机反馈参数 */
     typedef struct
     {
+        uint8_t initialized;    // 初始化标志,0=未初始化,1=已初始化
+
         float setAngle;     // 设置角度
         float setSpeed;     // 设置速度
         int16_t setCurrent; // 设置电流

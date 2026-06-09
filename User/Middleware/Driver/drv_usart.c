@@ -37,7 +37,9 @@ static UART_DMA_Interrupt_t *UART_DMA_ItSource_Array; // UART中断回调函数�
  */
 void AttachInterrupt_UART_DMA(UART_HandleTypeDef *huart, uint8_t *pData, uint8_t RxBuf_Size,void (*UART_Callback)(uint8_t *pData, uint16_t size))
 {
-    UART_DMA_ItSource_Array = (UART_DMA_Interrupt_t *)realloc(UART_DMA_ItSource_Array, (UART_DMA_Function_Count + 1) * sizeof(UART_DMA_Interrupt_t));
+    UART_DMA_Interrupt_t *tmp = (UART_DMA_Interrupt_t *)realloc(UART_DMA_ItSource_Array, (UART_DMA_Function_Count + 1) * sizeof(UART_DMA_Interrupt_t));
+    if (tmp == NULL) return; // 分配失败,放弃注册
+    UART_DMA_ItSource_Array = tmp;
     UART_DMA_ItSource_Array[UART_DMA_Function_Count].huart = huart;
     UART_DMA_ItSource_Array[UART_DMA_Function_Count].UART_RxBuf = pData;
     UART_DMA_ItSource_Array[UART_DMA_Function_Count].UART_RxBuf_Size = RxBuf_Size;

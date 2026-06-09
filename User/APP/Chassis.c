@@ -13,6 +13,13 @@ void Chassis_Init(void)
     DJ_Init(&chassis.ChassisMotors[1], 2, M3508, PID_METHOD);
     DJ_Init(&chassis.ChassisMotors[2], 3, M3508, PID_METHOD);
     DJ_Init(&chassis.ChassisMotors[3], 4, M3508, PID_METHOD);
+
+    DJ_SetSpeed(&chassis.ChassisMotors[0], chassis.Motors_Speed[0]);
+    DJ_SetSpeed(&chassis.ChassisMotors[1], chassis.Motors_Speed[1]);
+    DJ_SetSpeed(&chassis.ChassisMotors[2], chassis.Motors_Speed[2]);
+    DJ_SetSpeed(&chassis.ChassisMotors[3], chassis.Motors_Speed[3]);
+
+
 #endif
 
     /* 底盘角度pid */

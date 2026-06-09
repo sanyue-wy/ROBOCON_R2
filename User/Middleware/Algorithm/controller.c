@@ -5,7 +5,7 @@
  * @author  Zhang Hongyu (fuzzy pid)
  * @version V1.1.3
  * @date    2021/7/3
- * @brief   DWT¶¨Ê±Æ÷ÓÃÓÚ¼ÆËã¿ØÖÆÖÜÆÚ OLSÓÃÓÚÌáÈ¡ĞÅºÅÎ¢·Ö
+ * @brief   DWTï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ OLSï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½Åºï¿½Î¢ï¿½ï¿½
  ******************************************************************************
  * @attention
  *
@@ -13,33 +13,181 @@
  */
 #include "controller.h"
 
-/******************************** FUZZY PID **********************************/
+/**************************** åŸºç¡€PIDæ§åˆ¶å™¨å®ç° ******************************/
+
+// PIDåˆå§‹åŒ–
+void PID_Init(PID_t *pid, float kp, float ki, float kd, float max_out, float max_iout)
+{
+    pid->Kp = kp;
+    pid->Ki = ki;
+    pid->Kd = kd;
+    pid->max_out = max_out;
+    pid->max_iout = max_iout;
+    pid->err[0] = pid->err[1] = 0.0f;
+}
+
+/* PIDè®¡ç®—, è¾“å…¥åé¦ˆå€¼å’Œé¢„æœŸå€¼ */
+float PID_Calc(PID_t *pid, float fdb, float set)
+{
+    pid->set = set;
+    pid->fdb = fdb;
+    pid->err[1] = pid->err[0];
+    pid->err[0] = pid->set - pid->fdb;
+
+    pid->Pout = pid->Kp * pid->err[0];
+    pid->Iout += pid->Ki * pid->err[0];
+    pid->Dout = pid->Kd * pid->err[0] - pid->err[1];
+
+    if (pid->Iout > pid->max_iout)
+    {
+        pid->Iout = pid->max_iout;
+    }
+    else if (pid->Iout < -pid->max_iout)
+    {
+        pid->Iout = -pid->max_iout;
+    }
+
+    pid->out = pid->Pout + pid->Iout + pid->Dout;
+
+    if (pid->out > pid->max_out)
+    {
+        pid->out = pid->max_out;
+    }
+    else if (pid->out < -pid->max_out)
+    {
+        pid->out = -pid->max_out;
+    }
+
+    return pid->out;
+}
+
+static inline float fhan(float x1, float x2, float r, float h)
+{
+    float d, d0, y, a0, a;
+
+    d = r * h;
+    d0 = d * h;
+    y = x1 + x2 * h;
+    a0 = sqrtf(d * d + 8 * r * fabsf(y));
+    if (fabsf(y) <= d0)
+        a = x2 + y / h;
+    else
+        a = x2 + 0.5 * (a0 - d) * sign(y);
+
+    if (fabsf(a) <= d)
+        return -r * a / d;
+    else
+        return -r * sign(a);
+}
+
+void TDPID_Init(TDPID_t *TDpid, float kp, float ki, float kd, float max_out, float max_iout, float h, float r)
+{
+    TDpid->Kp = kp;
+    TDpid->Ki = ki;
+    TDpid->Kd = kd;
+    TDpid->max_out = max_out;
+    TDpid->max_iout = max_iout;
+    TDpid->h = h;
+    TDpid->r = r;
+    TDpid->err[0] = TDpid->err[1] = 0.0f;
+}
+
+/* TDPID */
+float TDPID_Calc(TDPID_t *TDpid, float fdb, float set)
+{
+    /******************************TD****************************************/
+    TDpid->x1 += TDpid->h * TDpid->x2;
+    TDpid->x2 += TDpid->h * fhan(TDpid->x1 - set, TDpid->x2, TDpid->r, TDpid->h);
+
+    TDpid->set = set;
+    TDpid->fdb = fdb;
+    TDpid->err[1] = TDpid->err[0];
+    TDpid->err[0] = TDpid->x1 - TDpid->fdb;
+
+    TDpid->Pout = TDpid->Kp * TDpid->err[0];
+    TDpid->Iout += TDpid->Ki * TDpid->err[0];
+    TDpid->Dout = TDpid->Kd * TDpid->err[0] - TDpid->err[1];
+
+    if (TDpid->Iout > TDpid->max_iout)
+    {
+        TDpid->Iout = TDpid->max_iout;
+    }
+    else if (TDpid->Iout < -TDpid->max_iout)
+    {
+        TDpid->Iout = -TDpid->max_iout;
+    }
+
+    TDpid->out = TDpid->Pout + TDpid->Iout + TDpid->Dout;
+
+    if (TDpid->out > TDpid->max_out)
+    {
+        TDpid->out = TDpid->max_out;
+    }
+    else if (TDpid->out < -TDpid->max_out)
+    {
+        TDpid->out = -TDpid->max_out;
+    }
+
+    return TDpid->out;
+}
+
+void FastPID_Init(fastPID_t *S, float kp, float ki, float kd, float maxout)
+{
+    S->A0 = kp + ki + kd;
+    S->A1 = -kp - 2 * kd;
+    S->A2 = kd;
+    S->MaxOut = maxout;
+}
+
+/* å¢é‡å¼PIDè®¡ç®—, è¾“å…¥inä¸ºè¯¯å·®å€¼ */
+float FastPID_Calc(fastPID_t *S, float in)
+{
+    /* detPID = Kp*(Error_1(k)-Error_1(k-1)) + Ki*(Error_1(k)) + Kd*(Error_1(k)-2*Error_2(k-1)+Error_2(k-2)) */
+    S->out = (S->A0 * in) + (S->A1 * S->state[0]) + (S->A2 * S->state[1]) + (S->out);
+
+    /* Update state */
+    S->state[1] = S->state[0];
+    S->state[0] = in;
+
+    if (S->out > S->MaxOut)
+    {
+        return (S->MaxOut);
+    }
+    else if (S->out < -S->MaxOut)
+    {
+        return -(S->MaxOut);
+    }
+
+    return (S->out);
+}
+
+/******************************** é«˜çº§PIDæ§åˆ¶å™¨ ******************************/
 static float FuzzyRuleKpRAW[7][7] = {
-    PB, PB, PM, PM, PS, ZE, ZE,
-    PB, PB, PM, PS, PS, ZE, PS,
-    PM, PM, PM, PS, ZE, PS, PS,
-    PM, PM, PS, ZE, PS, PM, PM,
-    PS, PS, ZE, PS, PS, PM, PM,
-    PS, ZE, PS, PM, PM, PM, PB,
-    ZE, ZE, PM, PM, PM, PB, PB};
+    {PB, PB, PM, PM, PS, ZE, ZE},
+    {PB, PB, PM, PS, PS, ZE, PS},
+    {PM, PM, PM, PS, ZE, PS, PS},
+    {PM, PM, PS, ZE, PS, PM, PM},
+    {PS, PS, ZE, PS, PS, PM, PM},
+    {PS, ZE, PS, PM, PM, PM, PB},
+    {ZE, ZE, PM, PM, PM, PB, PB}};
 
 static float FuzzyRuleKiRAW[7][7] = {
-    PB, PB, PM, PM, PS, ZE, ZE,
-    PB, PB, PM, PS, PS, ZE, ZE,
-    PB, PM, PM, PS, ZE, PS, PS,
-    PM, PM, PS, ZE, PS, PM, PM,
-    PS, PS, ZE, PS, PS, PM, PB,
-    ZE, ZE, PS, PS, PM, PB, PB,
-    ZE, ZE, PS, PM, PM, PB, PB};
+    {PB, PB, PM, PM, PS, ZE, ZE},
+    {PB, PB, PM, PS, PS, ZE, ZE},
+    {PB, PM, PM, PS, ZE, PS, PS},
+    {PM, PM, PS, ZE, PS, PM, PM},
+    {PS, PS, ZE, PS, PS, PM, PB},
+    {ZE, ZE, PS, PS, PM, PB, PB},
+    {ZE, ZE, PS, PM, PM, PB, PB}};
 
 static float FuzzyRuleKdRAW[7][7] = {
-    PS, PS, PB, PB, PB, PM, PS,
-    PS, PS, PB, PM, PM, PS, ZE,
-    ZE, PS, PM, PM, PS, PS, ZE,
-    ZE, PS, PS, PS, PS, PS, ZE,
-    ZE, ZE, ZE, ZE, ZE, ZE, ZE,
-    PB, PS, PS, PS, PS, PS, PB,
-    PB, PM, PM, PM, PS, PS, PB};
+    {PS, PS, PB, PB, PB, PM, PS},
+    {PS, PS, PB, PM, PM, PS, ZE},
+    {ZE, PS, PM, PM, PS, PS, ZE},
+    {ZE, PS, PS, PS, PS, PS, ZE},
+    {ZE, ZE, ZE, ZE, ZE, ZE, ZE},
+    {PB, PS, PS, PS, PS, PS, PB},
+    {PB, PM, PM, PM, PS, PS, PB}};
 
 void Fuzzy_Rule_Init(FuzzyRule_t *fuzzyRule, float (*fuzzyRuleKp)[7], float (*fuzzyRuleKi)[7], float (*fuzzyRuleKd)[7],
                      float kpRatio, float kiRatio, float kdRatio,
@@ -82,13 +230,13 @@ void Fuzzy_Rule_Implementation(FuzzyRule_t *fuzzyRule, float measure, float ref)
     fuzzyRule->ec = (fuzzyRule->e - fuzzyRule->eLast) / fuzzyRule->dt;
     fuzzyRule->eLast = fuzzyRule->e;
 
-    //Á¥ÊôÇø¼ä
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     eLeftIndex = fuzzyRule->e >= 3 * fuzzyRule->eStep ? 6 : (fuzzyRule->e <= -3 * fuzzyRule->eStep ? 0 : (fuzzyRule->e >= 0 ? ((int)(fuzzyRule->e / fuzzyRule->eStep) + 3) : ((int)(fuzzyRule->e / fuzzyRule->eStep) + 2)));
     eRightIndex = fuzzyRule->e >= 3 * fuzzyRule->eStep ? 6 : (fuzzyRule->e <= -3 * fuzzyRule->eStep ? 0 : (fuzzyRule->e >= 0 ? ((int)(fuzzyRule->e / fuzzyRule->eStep) + 4) : ((int)(fuzzyRule->e / fuzzyRule->eStep) + 3)));
     ecLeftIndex = fuzzyRule->ec >= 3 * fuzzyRule->ecStep ? 6 : (fuzzyRule->ec <= -3 * fuzzyRule->ecStep ? 0 : (fuzzyRule->ec >= 0 ? ((int)(fuzzyRule->ec / fuzzyRule->ecStep) + 3) : ((int)(fuzzyRule->ec / fuzzyRule->ecStep) + 2)));
     ecRightIndex = fuzzyRule->ec >= 3 * fuzzyRule->ecStep ? 6 : (fuzzyRule->ec <= -3 * fuzzyRule->ecStep ? 0 : (fuzzyRule->ec >= 0 ? ((int)(fuzzyRule->ec / fuzzyRule->ecStep) + 4) : ((int)(fuzzyRule->ec / fuzzyRule->ecStep) + 3)));
 
-    //Á¥Êô¶È
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     eLeftTemp = fuzzyRule->e >= 3 * fuzzyRule->eStep ? 0 : (fuzzyRule->e <= -3 * fuzzyRule->eStep ? 1 : (eRightIndex - fuzzyRule->e / fuzzyRule->eStep - 3));
     eRightTemp = fuzzyRule->e >= 3 * fuzzyRule->eStep ? 1 : (fuzzyRule->e <= -3 * fuzzyRule->eStep ? 0 : (fuzzyRule->e / fuzzyRule->eStep - eLeftIndex + 3));
     ecLeftTemp = fuzzyRule->ec >= 3 * fuzzyRule->ecStep ? 0 : (fuzzyRule->ec <= -3 * fuzzyRule->ecStep ? 1 : (ecRightIndex - fuzzyRule->ec / fuzzyRule->ecStep - 3));
@@ -111,25 +259,25 @@ void Fuzzy_Rule_Implementation(FuzzyRule_t *fuzzyRule, float measure, float ref)
 }
 
 /******************************* PID CONTROL *********************************/
-// PIDÓÅ»¯»·½Úº¯ÊıÉùÃ÷
-static void f_Trapezoid_Intergral(PID_t *pid);
-static void f_Integral_Limit(PID_t *pid);
-static void f_Derivative_On_Measurement(PID_t *pid);
-static void f_Changing_Integration_Rate(PID_t *pid);
-static void f_Output_Filter(PID_t *pid);
-static void f_Derivative_Filter(PID_t *pid);
-static void f_Output_Limit(PID_t *pid);
-static void f_Proportion_Limit(PID_t *pid);
-static void f_PID_ErrorHandle(PID_t *pid);
+// PIDï¿½Å»ï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+static void f_Trapezoid_Intergral(Ctrl_PID_t *pid);
+static void f_Integral_Limit(Ctrl_PID_t *pid);
+static void f_Derivative_On_Measurement(Ctrl_PID_t *pid);
+static void f_Changing_Integration_Rate(Ctrl_PID_t *pid);
+static void f_Output_Filter(Ctrl_PID_t *pid);
+static void f_Derivative_Filter(Ctrl_PID_t *pid);
+static void f_Output_Limit(Ctrl_PID_t *pid);
+static void f_Proportion_Limit(Ctrl_PID_t *pid);
+static void f_PID_ErrorHandle(Ctrl_PID_t *pid);
 
 /**
- * @brief          PID³õÊ¼»¯   PID initialize
- * @param[in]      PID½á¹¹Ìå   PID structure
- * @param[in]      ÂÔ
- * @retval         ·µ»Ø¿Õ      null
+ * @brief          PIDï¿½ï¿½Ê¼ï¿½ï¿½   PID initialize
+ * @param[in]      PIDï¿½á¹¹ï¿½ï¿½   PID structure
+ * @param[in]      ï¿½ï¿½
+ * @retval         ï¿½ï¿½ï¿½Ø¿ï¿½      null
  */
-void PID_Init_NEW(
-    PID_t *pid,
+void Ctrl_PID_Init(
+    Ctrl_PID_t *pid,
     float max_out,
     float intergral_limit,
     float deadband,
@@ -158,7 +306,7 @@ void PID_Init_NEW(
     pid->Kd = Kd;
     pid->ITerm = 0;
 
-    // ±äËÙ»ı·Ö²ÎÊı
+    // ï¿½ï¿½ï¿½Ù»ï¿½ï¿½Ö²ï¿½ï¿½ï¿½
     // coefficient of changing integration rate
     pid->CoefA = A;
     pid->CoefB = B;
@@ -167,19 +315,19 @@ void PID_Init_NEW(
 
     pid->Derivative_LPF_RC = derivative_lpf_rc;
 
-    // ×îĞ¡¶ş³ËÌáÈ¡ĞÅºÅÎ¢·Ö³õÊ¼»¯
+    // ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½Åºï¿½Î¢ï¿½Ö³ï¿½Ê¼ï¿½ï¿½
     // differential signal is distilled by OLS
     pid->OLS_Order = ols_order;
     OLS_Init(&pid->OLS, ols_order);
 
-    // DWT¶¨Ê±Æ÷¼ÆÊı±äÁ¿ÇåÁã
+    // DWTï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     // reset DWT Timer count counter
     pid->DWT_CNT = 0;
 
-    // ÉèÖÃPIDÓÅ»¯»·½Ú
+    // ï¿½ï¿½ï¿½ï¿½PIDï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½
     pid->Improve = improve;
 
-    // ÉèÖÃPIDÒì³£´¦Àí Ä¿Ç°½ö°üº¬µç»ú¶Â×ª±£»¤
+    // ï¿½ï¿½ï¿½ï¿½PIDï¿½ì³£ï¿½ï¿½ï¿½ï¿½ Ä¿Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½
     pid->ERRORHandler.ERRORCount = 0;
     pid->ERRORHandler.ERRORType = PID_ERROR_NONE;
 
@@ -187,18 +335,22 @@ void PID_Init_NEW(
 }
 
 /**
- * @brief          PID¼ÆËã
- * @param[in]      PID½á¹¹Ìå
- * @param[in]      ²âÁ¿Öµ
- * @param[in]      ÆÚÍûÖµ
- * @retval         ·µ»Ø¿Õ
+ * @brief          PIDï¿½ï¿½ï¿½ï¿½
+ * @param[in]      PIDï¿½á¹¹ï¿½ï¿½
+ * @param[in]      ï¿½ï¿½ï¿½ï¿½Öµ
+ * @param[in]      ï¿½ï¿½ï¿½ï¿½Öµ
+ * @retval         ï¿½ï¿½ï¿½Ø¿ï¿½
  */
-float PID_Calculate(PID_t *pid, float measure, float ref)
+float Ctrl_PID_Calculate(Ctrl_PID_t *pid, float measure, float ref)
 {
     if (pid->Improve & ErrorHandle)
         f_PID_ErrorHandle(pid);
 
-    pid->dt = DWT_GetDeltaT((void *)&pid->DWT_CNT);
+    {
+        uint32_t cnt = pid->DWT_CNT;
+        pid->dt = DWT_GetDeltaT(&cnt);
+        pid->DWT_CNT = cnt;
+    }
 
     pid->Measure = measure;
     pid->Ref = ref;
@@ -231,19 +383,19 @@ float PID_Calculate(PID_t *pid, float measure, float ref)
         if (pid->User_Func2_f != NULL)
             pid->User_Func2_f(pid);
 
-        // ÌİĞÎ»ı·Ö
+        // ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½
         if (pid->Improve & Trapezoid_Intergral)
             f_Trapezoid_Intergral(pid);
-        // ±äËÙ»ı·Ö
+        // ï¿½ï¿½ï¿½Ù»ï¿½ï¿½ï¿½
         if (pid->Improve & ChangingIntegrationRate)
             f_Changing_Integration_Rate(pid);
-        // Î¢·ÖÏÈĞĞ
+        // Î¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (pid->Improve & Derivative_On_Measurement)
             f_Derivative_On_Measurement(pid);
-        // Î¢·ÖÂË²¨Æ÷
+        // Î¢ï¿½ï¿½ï¿½Ë²ï¿½ï¿½ï¿½
         if (pid->Improve & DerivativeFilter)
             f_Derivative_Filter(pid);
-        // »ı·ÖÏŞ·ù
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Ş·ï¿½
         if (pid->Improve & Integral_Limit)
             f_Integral_Limit(pid);
 
@@ -251,14 +403,14 @@ float PID_Calculate(PID_t *pid, float measure, float ref)
 
         pid->Output = pid->Pout + pid->Iout + pid->Dout;
 
-        // Êä³öÂË²¨
+        // ï¿½ï¿½ï¿½ï¿½Ë²ï¿½
         if (pid->Improve & OutputFilter)
             f_Output_Filter(pid);
 
-        // Êä³öÏŞ·ù
+        // ï¿½ï¿½ï¿½ï¿½Ş·ï¿½
         f_Output_Limit(pid);
 
-        // ÎŞ¹Ø½ôÒª
+        // ï¿½Ş¹Ø½ï¿½Òª
         f_Proportion_Limit(pid);
     }
 
@@ -271,7 +423,7 @@ float PID_Calculate(PID_t *pid, float measure, float ref)
     return pid->Output;
 }
 
-static void f_Trapezoid_Intergral(PID_t *pid)
+static void f_Trapezoid_Intergral(Ctrl_PID_t *pid)
 {
     if (pid->FuzzyRule == NULL)
         pid->ITerm = pid->Ki * ((pid->Err + pid->Last_Err) / 2) * pid->dt;
@@ -279,11 +431,11 @@ static void f_Trapezoid_Intergral(PID_t *pid)
         pid->ITerm = (pid->Ki + pid->FuzzyRule->KiFuzzy) * ((pid->Err + pid->Last_Err) / 2) * pid->dt;
 }
 
-static void f_Changing_Integration_Rate(PID_t *pid)
+static void f_Changing_Integration_Rate(Ctrl_PID_t *pid)
 {
     if (pid->Err * pid->Iout > 0)
     {
-        // »ı·Ö³ÊÀÛ»ıÇ÷ÊÆ
+        // ï¿½ï¿½ï¿½Ö³ï¿½ï¿½Û»ï¿½ï¿½ï¿½ï¿½ï¿½
         // Integral still increasing
         if (abs(pid->Err) <= pid->CoefB)
             return; // Full integral
@@ -294,7 +446,7 @@ static void f_Changing_Integration_Rate(PID_t *pid)
     }
 }
 
-static void f_Integral_Limit(PID_t *pid)
+static void f_Integral_Limit(Ctrl_PID_t *pid)
 {
     static float temp_Output, temp_Iout;
     temp_Iout = pid->Iout + pid->ITerm;
@@ -303,7 +455,7 @@ static void f_Integral_Limit(PID_t *pid)
     {
         if (pid->Err * pid->Iout > 0)
         {
-            // »ı·Ö³ÊÀÛ»ıÇ÷ÊÆ
+            // ï¿½ï¿½ï¿½Ö³ï¿½ï¿½Û»ï¿½ï¿½ï¿½ï¿½ï¿½
             // Integral still increasing
             pid->ITerm = 0;
         }
@@ -321,7 +473,7 @@ static void f_Integral_Limit(PID_t *pid)
     }
 }
 
-static void f_Derivative_On_Measurement(PID_t *pid)
+static void f_Derivative_On_Measurement(Ctrl_PID_t *pid)
 {
     if (pid->FuzzyRule == NULL)
     {
@@ -339,19 +491,19 @@ static void f_Derivative_On_Measurement(PID_t *pid)
     }
 }
 
-static void f_Derivative_Filter(PID_t *pid)
+static void f_Derivative_Filter(Ctrl_PID_t *pid)
 {
     pid->Dout = pid->Dout * pid->dt / (pid->Derivative_LPF_RC + pid->dt) +
                 pid->Last_Dout * pid->Derivative_LPF_RC / (pid->Derivative_LPF_RC + pid->dt);
 }
 
-static void f_Output_Filter(PID_t *pid)
+static void f_Output_Filter(Ctrl_PID_t *pid)
 {
     pid->Output = pid->Output * pid->dt / (pid->Output_LPF_RC + pid->dt) +
                   pid->Last_Output * pid->Output_LPF_RC / (pid->Output_LPF_RC + pid->dt);
 }
 
-static void f_Output_Limit(PID_t *pid)
+static void f_Output_Limit(Ctrl_PID_t *pid)
 {
     if (pid->Output > pid->MaxOut)
     {
@@ -363,7 +515,7 @@ static void f_Output_Limit(PID_t *pid)
     }
 }
 
-static void f_Proportion_Limit(PID_t *pid)
+static void f_Proportion_Limit(Ctrl_PID_t *pid)
 {
     if (pid->Pout > pid->MaxOut)
     {
@@ -376,7 +528,7 @@ static void f_Proportion_Limit(PID_t *pid)
 }
 
 // PID ERRORHandle Function
-static void f_PID_ErrorHandle(PID_t *pid)
+static void f_PID_ErrorHandle(Ctrl_PID_t *pid)
 {
     /*Motor Blocked Handle*/
     if (pid->Output < pid->MaxOut * 0.001f || fabsf(pid->Ref) < 0.0001f)
@@ -401,10 +553,10 @@ static void f_PID_ErrorHandle(PID_t *pid)
 
 /*************************** FEEDFORWARD CONTROL *****************************/
 /**
- * @brief          Ç°À¡¿ØÖÆ³õÊ¼»¯
- * @param[in]      Ç°À¡¿ØÖÆ½á¹¹Ìå
- * @param[in]      ÂÔ
- * @retval         ·µ»Ø¿Õ
+ * @brief          Ç°ï¿½ï¿½ï¿½ï¿½ï¿½Æ³ï¿½Ê¼ï¿½ï¿½
+ * @param[in]      Ç°ï¿½ï¿½ï¿½ï¿½ï¿½Æ½á¹¹ï¿½ï¿½
+ * @param[in]      ï¿½ï¿½
+ * @retval         ï¿½ï¿½ï¿½Ø¿ï¿½
  */
 void Feedforward_Init(
     Feedforward_t *ffc,
@@ -416,7 +568,7 @@ void Feedforward_Init(
 {
     ffc->MaxOut = max_out;
 
-    // ÉèÖÃÇ°À¡¿ØÖÆÆ÷²ÎÊı Ïê¼ûÇ°À¡¿ØÖÆ½á¹¹Ìå¶¨Òå
+    // ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½Æ½á¹¹ï¿½å¶¨ï¿½ï¿½
     // set parameters of feed-forward controller (see struct definition)
     if (c != NULL && ffc != NULL)
     {
@@ -434,7 +586,7 @@ void Feedforward_Init(
 
     ffc->LPF_RC = lpf_rc;
 
-    // ×îĞ¡¶ş³ËÌáÈ¡ĞÅºÅÎ¢·Ö³õÊ¼»¯
+    // ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½Åºï¿½Î¢ï¿½Ö³ï¿½Ê¼ï¿½ï¿½
     // differential signal is distilled by OLS
     ffc->Ref_dot_OLS_Order = ref_dot_ols_order;
     ffc->Ref_ddot_OLS_Order = ref_ddot_ols_order;
@@ -449,34 +601,38 @@ void Feedforward_Init(
 }
 
 /**
- * @brief          PID¼ÆËã
- * @param[in]      PID½á¹¹Ìå
- * @param[in]      ²âÁ¿Öµ
- * @param[in]      ÆÚÍûÖµ
- * @retval         ·µ»Ø¿Õ
+ * @brief          PIDï¿½ï¿½ï¿½ï¿½
+ * @param[in]      PIDï¿½á¹¹ï¿½ï¿½
+ * @param[in]      ï¿½ï¿½ï¿½ï¿½Öµ
+ * @param[in]      ï¿½ï¿½ï¿½ï¿½Öµ
+ * @retval         ï¿½ï¿½ï¿½Ø¿ï¿½
  */
 float Feedforward_Calculate(Feedforward_t *ffc, float ref)
 {
-    ffc->dt = DWT_GetDeltaT((void *)&ffc->DWT_CNT);
+    {
+        uint32_t cnt = ffc->DWT_CNT;
+        ffc->dt = DWT_GetDeltaT(&cnt);
+        ffc->DWT_CNT = cnt;
+    }
 
     ffc->Ref = ref * ffc->dt / (ffc->LPF_RC + ffc->dt) +
                ffc->Ref * ffc->LPF_RC / (ffc->LPF_RC + ffc->dt);
 
-    // ¼ÆËãÒ»½×µ¼Êı
+    // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½×µï¿½ï¿½ï¿½
     // calculate first derivative
     if (ffc->Ref_dot_OLS_Order > 2)
         ffc->Ref_dot = OLS_Derivative(&ffc->Ref_dot_OLS, ffc->dt, ffc->Ref);
     else
         ffc->Ref_dot = (ffc->Ref - ffc->Last_Ref) / ffc->dt;
 
-    // ¼ÆËã¶ş½×µ¼Êı
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×µï¿½ï¿½ï¿½
     // calculate second derivative
     if (ffc->Ref_ddot_OLS_Order > 2)
         ffc->Ref_ddot = OLS_Derivative(&ffc->Ref_ddot_OLS, ffc->dt, ffc->Ref_dot);
     else
         ffc->Ref_ddot = (ffc->Ref_dot - ffc->Last_Ref_dot) / ffc->dt;
 
-    // ¼ÆËãÇ°À¡¿ØÖÆÊä³ö
+    // ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     // calculate feed-forward controller output
     ffc->Output = ffc->c[0] * ffc->Ref + ffc->c[1] * ffc->Ref_dot + ffc->c[2] * ffc->Ref_ddot;
 
@@ -502,7 +658,7 @@ void LDOB_Init(
 
     ldob->DeadBand = deadband;
 
-    // ÉèÖÃÏßĞÔÈÅ¶¯¹Û²âÆ÷²ÎÊı Ïê¼ûLDOB½á¹¹Ìå¶¨Òå
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å¶ï¿½ï¿½Û²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½LDOBï¿½á¹¹ï¿½å¶¨ï¿½ï¿½
     // set parameters of linear disturbance observer (see struct definition)
     if (c != NULL && ldob != NULL)
     {
@@ -518,11 +674,11 @@ void LDOB_Init(
         ldob->Max_Disturbance = 0;
     }
 
-    // ÉèÖÃQ(s)´ø¿í  Q(s)Ñ¡ÓÃÒ»½×¹ßĞÔ»·½Ú
+    // ï¿½ï¿½ï¿½ï¿½Q(s)ï¿½ï¿½ï¿½ï¿½  Q(s)Ñ¡ï¿½ï¿½Ò»ï¿½×¹ï¿½ï¿½Ô»ï¿½ï¿½ï¿½
     // set bandwidth of Q(s)    Q(s) is chosen as a first-order low-pass form
     ldob->LPF_RC = lpf_rc;
 
-    // ×îĞ¡¶ş³ËÌáÈ¡ĞÅºÅÎ¢·Ö³õÊ¼»¯
+    // ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½Åºï¿½Î¢ï¿½Ö³ï¿½Ê¼ï¿½ï¿½
     // differential signal is distilled by OLS
     ldob->Measure_dot_OLS_Order = measure_dot_ols_order;
     ldob->Measure_ddot_OLS_Order = measure_ddot_ols_order;
@@ -538,27 +694,31 @@ void LDOB_Init(
 
 float LDOB_Calculate(LDOB_t *ldob, float measure, float u)
 {
-    ldob->dt = DWT_GetDeltaT((void *)&ldob->DWT_CNT);
+    {
+        uint32_t cnt = ldob->DWT_CNT;
+        ldob->dt = DWT_GetDeltaT(&cnt);
+        ldob->DWT_CNT = cnt;
+    }
 
     ldob->Measure = measure;
 
     ldob->u = u;
 
-    // ¼ÆËãÒ»½×µ¼Êı
+    // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½×µï¿½ï¿½ï¿½
     // calculate first derivative
     if (ldob->Measure_dot_OLS_Order > 2)
         ldob->Measure_dot = OLS_Derivative(&ldob->Measure_dot_OLS, ldob->dt, ldob->Measure);
     else
         ldob->Measure_dot = (ldob->Measure - ldob->Last_Measure) / ldob->dt;
 
-    // ¼ÆËã¶ş½×µ¼Êı
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×µï¿½ï¿½ï¿½
     // calculate second derivative
     if (ldob->Measure_ddot_OLS_Order > 2)
         ldob->Measure_ddot = OLS_Derivative(&ldob->Measure_ddot_OLS, ldob->dt, ldob->Measure_dot);
     else
         ldob->Measure_ddot = (ldob->Measure_dot - ldob->Last_Measure_dot) / ldob->dt;
 
-    // ¹À¼Æ×ÜÈÅ¶¯
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å¶ï¿½
     // estimate external disturbances and internal disturbances caused by model uncertainties
     ldob->Disturbance = ldob->c[0] * ldob->Measure + ldob->c[1] * ldob->Measure_dot + ldob->c[2] * ldob->Measure_ddot - ldob->u;
     ldob->Disturbance = ldob->Disturbance * ldob->dt / (ldob->LPF_RC + ldob->dt) +
@@ -566,7 +726,7 @@ float LDOB_Calculate(LDOB_t *ldob, float measure, float u)
 
     ldob->Disturbance = float_constrain(ldob->Disturbance, -ldob->Max_Disturbance, ldob->Max_Disturbance);
 
-    // ÈÅ¶¯Êä³öËÀÇø
+    // ï¿½Å¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     // deadband of disturbance output
     if (abs(ldob->Disturbance) > ldob->DeadBand * ldob->Max_Disturbance)
         ldob->Output = ldob->Disturbance;
@@ -596,7 +756,11 @@ float TD_Calculate(TD_t *td, float input)
 {
     static float d, a0, y, a1, a2, a, fhan;
 
-    td->dt = DWT_GetDeltaT((void *)&td->DWT_CNT);
+    {
+        uint32_t cnt = td->DWT_CNT;
+        td->dt = DWT_GetDeltaT(&cnt);
+        td->DWT_CNT = cnt;
+    }
 
     if (td->dt > 0.5f)
         return 0;

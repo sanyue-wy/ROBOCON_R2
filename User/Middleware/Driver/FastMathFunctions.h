@@ -13,7 +13,9 @@
 
 #define FAST_MATH_TABLE_SIZE 512
 
+#ifndef PI
 #define PI 3.14159265358979f
+#endif
 #define PI_HALF 1.5707963267948966192313f
 
 typedef struct {

@@ -44,9 +44,11 @@ void DJ_CAN_Callback(CAN_RxHeaderTypeDef *pHeader, uint8_t *pBuf)
     case DJ_M7_ID:
     case DJ_M8_ID:
         {
-            static uint8_t i = 0;
+            uint8_t i = pHeader->StdId - DJ_M1_ID;
 
-            i = pHeader->StdId - DJ_M1_ID;
+            // 跳过未注册的电机
+            if (Motors[i] == NULL || !Motors[i]->initialized)
+                break;
 
             Motors[i]->last_angle = Motors[i]->angle;
             Motors[i]->angle = (uint16_t)(pBuf[0] << 8 | pBuf[1]);
@@ -115,6 +117,7 @@ void DJ_Init(DJ_Motor_t *motor, uint8_t Motor_ID, DJ_MotorType_e Motor_Type, DJ_
 #endif
 
     motor->method = method;
+    motor->initialized = 1;
     motorCount++;
     motor->ID = DJ_L_ID + Motor_ID;
     motor->setCurrent = 0;
@@ -128,12 +131,16 @@ void DJ_Init(DJ_Motor_t *motor, uint8_t Motor_ID, DJ_MotorType_e Motor_Type, DJ_
 //--------------------------------------------------------------------------
 // 大疆电机控制
 // 需要循环执行此函数
-inline void DJ_MotorRun(void)
+void DJ_MotorRun(void)
 {
-    static uint8_t data[8];
+    uint8_t data[8];
 
     for (uint8_t i = 0; i < 8; i++)
     {
+        // 跳过未初始化或未注册的电机
+        if (Motors[i] == NULL || !Motors[i]->initialized)
+            continue;
+
 #if PID
         if (Motors[i]->method == PID_METHOD)
         {
@@ -163,15 +170,15 @@ inline void DJ_MotorRun(void)
 #endif
     }
 
-    /* 控制电机电流 */
-    data[0] = Motors[0]->setCurrent >> 8;
-    data[1] = Motors[0]->setCurrent;
-    data[2] = Motors[1]->setCurrent >> 8;
-    data[3] = Motors[1]->setCurrent;
-    data[4] = Motors[2]->setCurrent >> 8;
-    data[5] = Motors[2]->setCurrent;
-    data[6] = Motors[3]->setCurrent >> 8;
-    data[7] = Motors[3]->setCurrent;
+    /* 控制电机电流 - 低4个电机 (ID 1-4) */
+    for (uint8_t i = 0; i < 4; i++)
+    {
+        int16_t current = 0;
+        if (Motors[i] != NULL && Motors[i]->initialized)
+            current = Motors[i]->setCurrent;
+        data[i * 2]     = current >> 8;
+        data[i * 2 + 1] = current;
+    }
 #ifdef HAL_CAN_MODULE_ENABLED
     if (HAL_CAN_GetTxMailboxesFreeLevel(&DJ_MOTOR_CAN) > 0)
     {
@@ -183,14 +190,16 @@ inline void DJ_MotorRun(void)
         continue;
     FDCAN_Transmit(&DJ_MOTOR_CAN, DJ_L_ID, data);
 #endif
-    data[0] = Motors[4]->setCurrent >> 8;
-    data[1] = Motors[4]->setCurrent;
-    data[2] = Motors[5]->setCurrent >> 8;
-    data[3] = Motors[5]->setCurrent;
-    data[4] = Motors[6]->setCurrent >> 8;
-    data[5] = Motors[6]->setCurrent;
-    data[6] = Motors[7]->setCurrent >> 8;
-    data[7] = Motors[7]->setCurrent;
+
+    /* 控制电机电流 - 高4个电机 (ID 5-8) */
+    for (uint8_t i = 4; i < 8; i++)
+    {
+        int16_t current = 0;
+        if (Motors[i] != NULL && Motors[i]->initialized)
+            current = Motors[i]->setCurrent;
+        data[(i - 4) * 2]     = current >> 8;
+        data[(i - 4) * 2 + 1] = current;
+    }
 #ifdef HAL_CAN_MODULE_ENABLED
     if (HAL_CAN_GetTxMailboxesFreeLevel(&DJ_MOTOR_CAN) > 0)
     {
