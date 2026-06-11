@@ -56,7 +56,8 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+#define mode_task 1
+#define mode_debug 0
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -103,8 +104,12 @@ int main(void)
   MX_TIM10_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
- // App_Task_Init();
+#if mode_task==1
+ App_Task_Init();
+#endif
+#if mode_debug==1
  debug_init();
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -114,8 +119,14 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    //App_Task_Run();
+    // 调试：LED闪烁确认固件在运行
+
+#if mode_task==1
+    App_Task_Run();
+#endif
+#if mode_debug==1
     debug_run();
+#endif
   }
   /* USER CODE END 3 */
 }

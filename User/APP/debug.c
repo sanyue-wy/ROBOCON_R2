@@ -30,6 +30,9 @@
 #if USB_debug==1
 
 #endif
+#if pc_debug==1
+
+#endif
 
 void debug_init(void)
 {
@@ -79,6 +82,10 @@ car_lift_init();
 #endif
 
 
+#if pc_debug==1
+usb_pc_init();
+#endif
+
 }
 
 
@@ -88,6 +95,16 @@ car_lift_init();
 void debug_run(void)
 {
 
+#if pc_debug==1
+    usb_pc_run(&current_command);
+    if (current_command.motion == CAR_FORWARD)
+    {
+       Transmit_to_PC((uint8_t *)"Moving forward\n", 15);
+
+    }
+
+
+#endif
 #if USB_debug==1
 CDC_Transmit_FS("hello world\n",11);
     HAL_Delay(1000);

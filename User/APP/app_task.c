@@ -13,7 +13,7 @@ void App_Task_Init(void)
 
 Chassis_Init();
 
-	init_finished = true;
+
 }
 
 void App_Task_Run(void)

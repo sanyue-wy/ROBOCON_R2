@@ -3,140 +3,162 @@
 //
 
 #include "dev_pc.h"
-
-#include <sys/types.h>
-#include <stdlib.h>
+#include "drv_usb.h"
 #include <string.h>
+#include <ctype.h>
 
-#include "usart.h"
+// 字节流环形缓冲区大小（建议 2048，足够缓冲多帧）
+#define RX_RING_SIZE    2048
 
-#define APP_RX_BUF_NUM  4
-static uint8_t app_rx_buf[APP_RX_BUF_NUM][USB_BUFFER_SIZE];
-static uint16_t app_rx_len[APP_RX_BUF_NUM];
-static uint8_t app_rx_wp = 0; // 写指针（回调写入）
-static uint8_t app_rx_rp = 0; // 读指针（主循环读取）
+// 命令队列深度（可缓存多个已解析的命令）
+#define CMD_QUEUE_SIZE  4
 
+// 帧长度固定：1 字节头 + 4 字节运动 + 5 字节数据 = 10 字节
+#define FRAME_LEN       10
 
+static uint8_t rx_ring[RX_RING_SIZE];
+static volatile uint16_t rx_wr = 0;   // 写入索引
+static volatile uint16_t rx_rd = 0;   // 读取索引
 
-//USB接受初始化
-void usb_pc(void)
+pc_command_t current_command={0};
+
+// 命令队列（存储解析好的完整命令）
+static pc_command_t cmd_queue[CMD_QUEUE_SIZE];
+static volatile uint8_t cmd_wp = 0;
+static volatile uint8_t cmd_rp = 0;
+
+// 将 4 字节状态字符串（小写）转换为枚举
+static car_motion_t parse_motion(const char *str)
 {
-    USB_Init(usb_receive_callback);
+    if (strncmp(str, "stop", 4) == 0) return CAR_STOP;
+    if (strncmp(str, "fwrd", 4) == 0) return CAR_FORWARD;
+    if (strncmp(str, "bwrd", 4) == 0) return CAR_BACKWARD;
+    if (strncmp(str, "ltrn", 4) == 0) return CAR_TURN_LEFT;
+    if (strncmp(str, "rtrn", 4) == 0) return CAR_TURN_RIGHT;
+    if (strncmp(str, "ltrl", 4) == 0) return CAR_TRANSLATE_LEFT;
+    if (strncmp(str, "rtrl", 4) == 0) return CAR_TRANSLATE_RIGHT;
+    if (strncmp(str, "upwd", 4) == 0) return CAR_UP;
+    if (strncmp(str, "dwnd", 4) == 0) return CAR_DOWN;
+    return CAR_STOP;
 }
 
-void Transmit_to_PC(uint8_t *Data, uint16_t Length)
+// 将 5 位 ASCII 数字字符串转换为整数 (0~65535)
+static uint16_t parse_data(const char *str)
 {
-    if (Data!=NULL)
-    USB_Transmit_Data( Data,  Length);
-}
-//usb接受回调函数
-void usb_receive_callback(uint8_t *Buffer, uint16_t Length)
-{
-    // 仅做：数据拷贝 + 入队（1~2ms完成，绝对不阻塞USB接收）
-    if (Length == 0 || Length > USB_BUFFER_SIZE) return;
-
-    // 写入环形缓冲区
-    memcpy(app_rx_buf[app_rx_wp], Buffer, Length);
-    app_rx_len[app_rx_wp] = Length;
-
-    // 移动写指针
-    app_rx_wp = (app_rx_wp + 1) % APP_RX_BUF_NUM;
+    uint16_t val = 0;
+    for (int i = 0; i < 5; i++) {
+        char c = str[i];
+        if (c < '0' || c > '9') break;
+        val = val * 10 + (c - '0');
+    }
+    return val;
 }
 
-//字符串 → 运动状态枚举
-static movement_state Parse_State(const char *str)
+// 从字节流环形缓冲区中提取一帧（如果有），填充 out，返回 true
+static bool try_extract_frame(pc_command_t *out)
 {
-    if (strcmp(str, "car_forward") == 0)        return car_forward;
-    if (strcmp(str, "car_backward") == 0)       return car_backward;
-    if (strcmp(str, "car_turn_left") == 0)      return car_turn_left;
-    if (strcmp(str, "car_turn_right") == 0)     return car_turn_right;
-    if (strcmp(str, "car_translate_left") == 0) return car_translate_left;
-    if (strcmp(str, "car_translate_right") == 0)return car_translate_right;
-    if (strcmp(str, "car__up") == 0)        return car_up;
-    if (strcmp(str, "car__down") == 0)      return car_down;
-    return car_stop;
-}
+    // 计算可读字节数
+    uint16_t available;
+    if (rx_wr >= rx_rd)
+        available = rx_wr - rx_rd;
+    else
+        available = RX_RING_SIZE - rx_rd + rx_wr;
 
-//实际的命令解析  格式: "运动状态:数据1,数据2,..."
-//解析结果通过cmd_out传出，不依赖全局变量
-static void USB_Parse_Data(pc_command_t *cmd, uint8_t *Data, uint16_t Len)
-{
-    char cmd_state[10] = {0};
-    char cmd_info[20] = {0};
-    uint8_t colon_pos = 0;
-    uint8_t has_colon = 0;
-    uint8_t i;
+    if (available < FRAME_LEN) return false;   // 不够一帧
 
-    // 初始化输出
-    cmd->state = car_stop;
-    memset(cmd->data, 0, sizeof(cmd->data));
-    cmd->data_count = 0;
+    // 搜索帧头 'M'
+    uint16_t search_pos = rx_rd;
+    uint16_t found_pos = RX_RING_SIZE; // 无效值
+    uint16_t tmp_rd = rx_rd;
+    uint16_t tmp_wr = rx_wr;
 
-    // 1. 查找冒号位置
-    for (i = 0; i < Len; i++)
-    {
-        if (Data[i] == ':')
-        {
-            colon_pos = i;
-            has_colon = 1;
+    for (uint16_t i = 0; i <= available - FRAME_LEN; i++) {
+        uint16_t pos = (tmp_rd + i) % RX_RING_SIZE;
+        if (rx_ring[pos] == PC_FRAME_HEADER) {
+            found_pos = pos;
             break;
         }
     }
 
-    // 2. 提取冒号前的运动状态
-    uint8_t state_len = has_colon ? colon_pos : Len;
-    if (state_len > sizeof(cmd_state) - 1)
-        state_len = sizeof(cmd_state) - 1;
-    for (i = 0; i < state_len; i++)
-    {
-        cmd_state[i] = Data[i];
+    if (found_pos == RX_RING_SIZE) return false;   // 未找到帧头
+
+    // 提取 10 字节帧数据
+    uint8_t frame[FRAME_LEN];
+    for (uint16_t i = 0; i < FRAME_LEN; i++) {
+        uint16_t idx = (found_pos + i) % RX_RING_SIZE;
+        frame[i] = rx_ring[idx];
     }
 
-    // 字符串 → 枚举
-    cmd->state = Parse_State(cmd_state);
+    // 解析运动状态（frame[1]~frame[4]）
+    char motion_str[5] = {0};
+    for (int i = 0; i < 4; i++) {
+        motion_str[i] = tolower(frame[1 + i]);
+    }
+    // 解析数据（frame[5]~frame[9]）
+    char data_str[6] = {0};
+    memcpy(data_str, &frame[5], 5);
 
-    // 3. 提取冒号后的数据并存入cmd->data[]
-    if (has_colon && colon_pos < Len - 1)
-    {
-        uint8_t info_start = colon_pos + 1;
-        uint8_t info_len = Len - info_start;
-        if (info_len > sizeof(cmd_info) - 1)
-            info_len = sizeof(cmd_info) - 1;
-        for (i = 0; i < info_len; i++)
-        {
-            cmd_info[i] = Data[info_start + i];
-        }
+    out->motion = parse_motion(motion_str);
+    out->data   = parse_data(data_str);
+    out->valid  = true;
 
-        // 按逗号分割, 存入cmd->data[]
-        uint8_t idx = 0;
-        char *token = strtok(cmd_info, ",");
-        while (token != NULL && idx < 20)
-        {
-            cmd->data[idx++] = atof(token);
-            token = strtok(NULL, ",");
+    // 移动读指针，跳过已处理的帧
+    rx_rd = (found_pos + FRAME_LEN) % RX_RING_SIZE;
+    return true;
+}
+
+// USB 接收回调（在中断中运行）
+void usb_receive_callback(uint8_t *Buffer, uint16_t Length)
+{
+    if (Length == 0 || Length > USB_BUFFER_SIZE) return;
+
+    for (uint16_t i = 0; i < Length; i++) {
+        uint16_t next_wr = (rx_wr + 1) % RX_RING_SIZE;
+        if (next_wr == rx_rd) {
+            // 环形缓冲区满：丢弃新数据（可记录错误标志）
+            break;
         }
-        cmd->data_count = idx;
+        rx_ring[rx_wr] = Buffer[i];
+        rx_wr = next_wr;
     }
 }
 
-//pc的命令不断解析和跑，解析结果通过cmd_out传出
-//返回1=有新命令被解析, 0=无新数据, cmd_out未更新
-uint8_t usb_pc_run(pc_command_t *cmd_out)
+// 初始化 USB 并注册回调
+void usb_pc_init(void)
 {
-    if (cmd_out == NULL) return 0;
+    rx_wr = 0;
+    rx_rd = 0;
+    cmd_wp = 0;
+    cmd_rp = 0;
+    USB_Init(usb_receive_callback);
+}
 
-    // 轮询处理接收的数据（不阻塞）
-    if (app_rx_wp != app_rx_rp)
-    {
-        USB_Parse_Data(
-            cmd_out,
-            app_rx_buf[app_rx_rp],
-            app_rx_len[app_rx_rp]
-        );
+// 主循环中调用，获取一个命令。返回 true 表示有有效命令
+bool usb_pc_run(pc_command_t *out_cmd)
+{
+    if (out_cmd == NULL) return false;
 
-        // 移动读指针
-        app_rx_rp = (app_rx_rp + 1) % APP_RX_BUF_NUM;
-        return 1;
+    // 先检查命令队列是否有已解析的命令
+    if (cmd_wp != cmd_rp) {
+        *out_cmd = cmd_queue[cmd_rp];
+        cmd_rp = (cmd_rp + 1) % CMD_QUEUE_SIZE;
+        return true;
     }
-    return 0;
+
+    // 尝试从字节流中提取一帧
+    pc_command_t new_cmd;
+    if (try_extract_frame(&new_cmd)) {
+        // 可以立即返回，也可以放入队列（这里直接返回）
+        *out_cmd = new_cmd;
+        return true;
+    }
+
+    return false;
+}
+
+// 发送数据到 PC
+void Transmit_to_PC(uint8_t *Data, uint16_t Length)
+{
+    if (Data == NULL || Length == 0) return;
+    USB_Transmit_Data(Data, Length);
 }

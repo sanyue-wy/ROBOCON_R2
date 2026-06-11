@@ -31,8 +31,13 @@ extern uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 void USB_Init(USB_Callback Callback_Function)
 {
     USB0_Manage_Object.Callback_Function = Callback_Function;
-
-    USB0_Manage_Object.Rx_Buffer_Active = UserRxBufferFS;
+    // 初始化双缓冲指针
+    USB0_Manage_Object.Rx_Buffer_Active = USB0_Manage_Object.Rx_Buffer_0;
+    USB0_Manage_Object.Rx_Buffer_Ready = NULL;  // 初始无就绪数据
+    // 设置 USB 底层接收缓冲区为活跃缓冲区
+    USBD_CDC_SetRxBuffer(&hUsbDeviceFS, USB0_Manage_Object.Rx_Buffer_Active);
+    USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+    init_finished = true;
 }
 
 /**
