@@ -6,8 +6,7 @@ chassis_t chassis;//底盘参数体
 // 底盘初始化
 void Chassis_Init(void)
 {
-
-    AttachInterrupt_CAN(&hcan1, DJ_CAN_Callback);
+    AttachInterrupt_CAN(&hcan1, DJ_CAN_Callback,0);
 #if MOTOR_ON
     DJ_Init(&chassis.ChassisMotors[0], 1, M3508, PID_METHOD);
     DJ_Init(&chassis.ChassisMotors[1], 2, M3508, PID_METHOD);
@@ -36,7 +35,7 @@ inline void Chassis_Run(void)
 
 /**
  * 设置底盘速度
- * 正反向为X轴，左方向为Y轴，m/s
+ * 正方向为X轴，左方向为Y轴，m/s
  * 逆时针为正， rad/s
  */
 void Chassis_SetSpeed(float Vx, float Vy, float Vw)

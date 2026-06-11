@@ -23,8 +23,9 @@ uint8_t CAN_Transmit(CAN_HandleTypeDef *hcan, uint16_t ID, uint8_t *Buf);
  * 联接CAN中断源和中断回调函数
  * 应输入CAN源, 回调函数个数以及回调函数的地址
  * 联接后自动开启中断
+ * FilterBank CAN1采用0到13 CAN2采用14到27
  */
-void AttachInterrupt_CAN(CAN_HandleTypeDef *hcan, void (*CAN_Callback)(CAN_RxHeaderTypeDef *pHeader, uint8_t *pBuf));
+void AttachInterrupt_CAN(CAN_HandleTypeDef *hcan, void (*CAN_Callback)(CAN_RxHeaderTypeDef *pHeader, uint8_t *pBuf),uint32_t FilterBank);
 #endif /* HAL_CAN_MODULE_ENABLED */
 
 

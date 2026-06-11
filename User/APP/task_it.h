@@ -12,4 +12,6 @@
 
 void MM_TIM_Callback(void);
 void TASK_1MS_TIM_callback(void);
+void Task_it_callback(void);
+
 #endif //task_it_H

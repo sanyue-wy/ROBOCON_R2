@@ -27,3 +27,18 @@ void TASK_1MS_TIM_callback(void)
 
 
 }
+
+void Task_it_callback(void)
+{
+    static uint16_t count;
+    DJ_MotorRun();
+
+    if (count++ > 1000)
+    {
+        count = 0;
+        HAL_GPIO_TogglePin(GPIOH, GPIO_PIN_10);
+    }
+
+
+
+}
