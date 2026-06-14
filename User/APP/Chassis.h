@@ -2,8 +2,8 @@
 * 四轮麦轮底盘
  *
  * 以码盘正方向为x轴正方向，左侧为Y轴正方向
- * -----右前ID为2----- *
- * -----左前ID为1----- *
+ * -----右前ID为1----- *
+ * -----左前ID为2----- *
  * -----左后ID为4----- *
  * -----右后ID为3----- *
  */
@@ -18,18 +18,12 @@
 #define MOTOR_ON 1
 #define SELFINSPEDTION_ON 1
 
-#define RADIUS 0.1265f // 轮子直径
-#define LENGTH 0.190f // 底盘半长
-#define WIDTH 0.1828f  // 底盘半宽
-#define RR 0.26366f   // 轮子到中心的距离
+#define RADIUS 0.152f // 轮子直径
+#define LENGTH 0.4518f // 底盘半长
+#define WIDTH 0.45f  // 底盘半宽
+#define RR 0.6377f   // 轮子到中心的距离
 #define DECRATIO 19   // 电机减速比
 
-#define MAX_VELOCITY1 1.0f
-#define MAX_ANGULAR1 1.0f
-#define MAX_VELOCITY2 2.0f
-#define MAX_ANGULAR2 1.5f
-#define MAX_VELOCITY3 3.5f
-#define MAX_ANGULAR3 3.0f
 
 
 typedef enum

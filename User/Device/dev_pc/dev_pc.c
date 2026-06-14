@@ -31,14 +31,22 @@ static volatile uint8_t cmd_rp = 0;
 static car_motion_t parse_motion(const char *str)
 {
     if (strncmp(str, "stop", 4) == 0) return CAR_STOP;
-    if (strncmp(str, "fwrd", 4) == 0) return CAR_FORWARD;
+    if (strncmp(str, "fwrd", 4) == 0) return CAR_FORWARD;    //速度数据给到0到10000，映射到0到1.592m/s
     if (strncmp(str, "bwrd", 4) == 0) return CAR_BACKWARD;
     if (strncmp(str, "ltrn", 4) == 0) return CAR_TURN_LEFT;
-    if (strncmp(str, "rtrn", 4) == 0) return CAR_TURN_RIGHT;
+    if (strncmp(str, "rtrn", 4) == 0) return CAR_TURN_RIGHT;  //速度数据给到0到10000,映射到0到2.49rad/s
     if (strncmp(str, "ltrl", 4) == 0) return CAR_TRANSLATE_LEFT;
     if (strncmp(str, "rtrl", 4) == 0) return CAR_TRANSLATE_RIGHT;
     if (strncmp(str, "upwd", 4) == 0) return CAR_UP;
     if (strncmp(str, "dwnd", 4) == 0) return CAR_DOWN;
+    if (strncmp(str, "doff", 4) == 0) return CAR_DOFF;     // 三自由度平台 后面角度单位度
+    if (strncmp(str, "dofs", 4) == 0) return CAR_DOFS;
+    if (strncmp(str, "doft", 4) == 0) return CAR_DOFT;
+    if (strncmp(str, "suck", 4) == 0) return CAR_SUCK;     //吸盘吸取物块  后面五位数据给55555为吸住，给44444为放下
+    if (strncmp(str, "taup", 4) == 0) return CAR_TABLE_UP;    //升降台  后面数据为上升距离 单位mm
+    if (strncmp(str, "tadw", 4) == 0) return CAR_TABLE_DOWN;
+    if (strncmp(str, "fing", 4) == 0) return CAR_FINGER;  //气动拇指夹取武器 后面五位数据给55555为夹取，给44444为放下
+    if (strncmp(str, "fwrs", 4) == 0) return CAR_FINGER_WRIST; //气动手指腕部舵机旋转角度，后面数据给0到180，映射到-90到90度
     return CAR_STOP;
 }
 

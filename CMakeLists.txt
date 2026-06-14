@@ -62,12 +62,16 @@ add_executable(${CMAKE_PROJECT_NAME}
         User/Middleware/Algorithm/QuaternionEKF.c
         User/APP/ins_task.c
         User/Middleware/Driver/bsp_PWM.c
-        User/Device/dev_car_lifting/car_lifting.c
+        User/Device/dev_lift/dev_lift.c
         User/Device/dev_remote/dvc_remote.c
         User/Device/dev_remote/dvc_remote.h
         User/Middleware/Driver/drv_usb.h
         User/Middleware/Driver/drv_usb.c
         User/Device/dev_pc/dev_pc.c
+        User/APP/car_lifting.c
+        User/Device/dev_3DOF_SC/dev_3DOF_SC.c
+        User/Device/dev_air_finger/dev_air_finger.c
+        User/Device/dev_lift_table/dev_lift_table.c
 )
 
 # Add STM32CubeMX generated sources
@@ -93,9 +97,13 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         User/Device/dev_dji_motor
         User/Device/dev_vofa
         User/Device/dev_imu
-        User/Device/dev_car_lifting
+        User/Device/dev_lift
         User/Device/dev_remote
         User/Device/dev_pc
+        User/Device/dev_3DOF_SC
+        User/Device/dev_air_finger
+        User/Device/dev_lift_table
+
 )
 
 # Add project symbols (macros)

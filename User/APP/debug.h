@@ -21,7 +21,7 @@
 #include "spi.h"
 #include  "bsp_dwt.h"
 #include "BMI088driver.h"
-#include  "car_lifting.h"
+#include  "dev_lift.h"
 #include  "dvc_remote.h"
 #include  "usbd_cdc_if.h"
 #include "dev_pc.h"

@@ -21,7 +21,15 @@ typedef enum {
     CAR_TRANSLATE_LEFT,
     CAR_TRANSLATE_RIGHT,
     CAR_UP,
-    CAR_DOWN
+    CAR_DOWN,
+    CAR_DOFF, //这三个自由度
+    CAR_DOFS,
+    CAR_DOFT,
+    CAR_SUCK,
+    CAR_TABLE_UP,
+    CAR_TABLE_DOWN,
+    CAR_FINGER,
+    CAR_FINGER_WRIST
 } car_motion_t;
 
 typedef struct {

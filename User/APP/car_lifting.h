@@ -1,14 +1,15 @@
 //
-// Created by wy on 2026/4/29.
+// Created by wy on 2026/6/11.
 //
 
 #ifndef car_lifting_H
 #define car_lifting_H
-#include "gpio.h"
+#include "dev_lift.h"
+#include "Chassis.h"
+
+void car_lift_init(void);
 void car_lift_up(void);
 void car_lift_down(void);
-void car_lift_init(void);
-
 
 
 #endif //car_lifting_H

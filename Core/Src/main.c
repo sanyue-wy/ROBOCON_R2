@@ -103,6 +103,8 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM10_Init();
   MX_USB_DEVICE_Init();
+  MX_CAN2_Init();
+  MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
 #if mode_task==1
  App_Task_Init();

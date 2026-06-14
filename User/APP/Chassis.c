@@ -45,10 +45,10 @@ void Chassis_SetSpeed(float Vx, float Vy, float Vw)
 
 
 
-    chassis.Motors_Speed[0] = (int16_t)((Vx+Vy-Vp) / PI / RADIUS *60 * DECRATIO);
+    chassis.Motors_Speed[0] = (int16_t)((-Vx-Vy-Vp) / PI / RADIUS *60 * DECRATIO);
     chassis.Motors_Speed[1] = (int16_t)((Vx-Vy-Vp) / PI / RADIUS *60 * DECRATIO);
-    chassis.Motors_Speed[2] = (int16_t)((Vx-Vy+Vp) / PI / RADIUS *60 * DECRATIO);
-    chassis.Motors_Speed[3] = (int16_t)((Vx+Vy+Vp) / PI / RADIUS *60 * DECRATIO);
+    chassis.Motors_Speed[2] = (int16_t)((-Vx+Vy-Vp) / PI / RADIUS *60 * DECRATIO);
+    chassis.Motors_Speed[3] = (int16_t)((Vx+Vy-Vp) / PI / RADIUS *60 * DECRATIO);
 
 #if MOTOR_ON
     DJ_SetSpeed(&chassis.ChassisMotors[0], chassis.Motors_Speed[0]);
