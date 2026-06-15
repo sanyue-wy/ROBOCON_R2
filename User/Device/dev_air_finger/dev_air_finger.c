@@ -43,7 +43,7 @@ void Servo_SetAngle_135(uint32_t channel, int16_t angle)
 
     // 线性映射：-90°(500) ~ +90°(2500)
     // 0° 对应 1500
-    uint32_t ccr = 1500 + (angle * 1000) / 135;
+    uint32_t ccr = 1500 + ((angle+20) * 1000) / 135;
 
     __HAL_TIM_SET_COMPARE(&htim8, channel, ccr);
 }

@@ -34,9 +34,17 @@
 
 #endif
 
+#if air_finger_wrist_debug==1
+#endif
+
+#if dof_debug==1
+
+
+#endif
+
 void debug_init(void)
 {
-    AttachInterrupt_TIM(&htim7, MM_TIM_Callback);
+    AttachInterrupt_TIM(&htim7, Task_it_callback);
     HAL_TIM_Base_Start_IT(&htim7);
 #if USB_debug==1
 
@@ -75,7 +83,7 @@ car_lift_init();
 
 #if dji_motor_debug==1
     AttachInterrupt_CAN(&hcan1, DJ_CAN_Callback);
-    DJ_Init(&DJ_Motor3508[0], 1, M3508, PID_METHOD);
+    DJ_Init(&DJ_Motor3508[0], 1, M3508, PID_METHOD, &hcan1);
     DJ_SetSpeed(&DJ_Motor3508[0],0);
     AttachInterrupt_TIM(&htim2, TASK_1MS_TIM_callback);
     HAL_TIM_Base_Start_IT(&htim1);
@@ -86,6 +94,28 @@ car_lift_init();
 usb_pc_init();
 #endif
 
+#if air_finger_wrist_debug==1
+    Servo_Init();
+   //  HAL_Delay(1000);
+   //  Servo_SetAngle_135(TIM_CHANNEL_1,60);
+   //  HAL_Delay(1000);
+   // Servo_SetAngle_135(TIM_CHANNEL_1,-60);
+
+
+
+#endif
+
+#if dof_debug==1
+    AttachInterrupt_CAN(&hcan2, DJ_CAN_Callback,15);
+    DJ_Init(&sc_motor[2], 3, M3508, PID_METHOD, &hcan2);
+    DJ_SetAngleInc(&sc_motor[2], 0);
+    HAL_Delay(1000);
+    DJ_SetAngleInc(&sc_motor[2], 360);
+    HAL_Delay(1000);
+    DJ_SetAngleInc(&sc_motor[2], -360);
+#endif
+
+
 }
 
 
@@ -94,6 +124,17 @@ usb_pc_init();
 
 void debug_run(void)
 {
+#if air_finger_wrist_debug==1
+
+
+
+#endif
+
+#if dof_debug==1
+
+
+#endif
+
 
 #if pc_debug==1
     usb_pc_run(&current_command);
@@ -151,5 +192,10 @@ vofa_FloatSend(a,5);
 #if dji_motor_debug==1
 
 #endif
+
+
+
+
+
 
 }

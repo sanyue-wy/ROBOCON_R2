@@ -12,7 +12,7 @@
 typedef struct
 {
     CAN_HandleTypeDef *hcan;
-    void (*CAN_Callback)(CAN_RxHeaderTypeDef *pHeader, uint8_t *pBuf);
+    void (*CAN_Callback)(CAN_HandleTypeDef *hcan, CAN_RxHeaderTypeDef *pHeader, uint8_t *pBuf);
 
 } CAN_Interrupt_t;
 
@@ -25,7 +25,7 @@ uint8_t CAN_Transmit(CAN_HandleTypeDef *hcan, uint16_t ID, uint8_t *Buf);
  * 联接后自动开启中断
  * FilterBank CAN1采用0到13 CAN2采用14到27
  */
-void AttachInterrupt_CAN(CAN_HandleTypeDef *hcan, void (*CAN_Callback)(CAN_RxHeaderTypeDef *pHeader, uint8_t *pBuf),uint32_t FilterBank);
+void AttachInterrupt_CAN(CAN_HandleTypeDef *hcan, void (*CAN_Callback)(CAN_HandleTypeDef *hcan, CAN_RxHeaderTypeDef *pHeader, uint8_t *pBuf),uint32_t FilterBank);
 #endif /* HAL_CAN_MODULE_ENABLED */
 
 

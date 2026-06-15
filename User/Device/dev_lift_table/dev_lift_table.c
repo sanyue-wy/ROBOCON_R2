@@ -14,8 +14,8 @@ DJ_Motor_t lift_motor;
  */
 void lift_table_init(void)
 {
-    DJ_Init(&lift_motor, 5, M3508, PID_METHOD);
-    DJ_SetAngleInc(&lift_motor, 0);
+    DJ_Init(&lift_motor, 5, M3508, PID_METHOD, &hcan1);
+   DJ_SetAngle(&lift_motor, 0,8000);
 }
 
 /***
@@ -25,7 +25,7 @@ void lift_table_init(void)
 void lift_table_run(int16_t high)
 {
     int32_t angle_add=(int32_t)((float)high/HIGH_MAP_ANGLE*360);
-    DJ_SetAngleInc(&lift_motor, angle_add);
+    DJ_SetAngle(&lift_motor, angle_add,8000);
 }
 
 

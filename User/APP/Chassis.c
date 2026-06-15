@@ -8,10 +8,10 @@ void Chassis_Init(void)
 {
     AttachInterrupt_CAN(&hcan1, DJ_CAN_Callback,0);
 #if MOTOR_ON
-    DJ_Init(&chassis.ChassisMotors[0], 1, M3508, PID_METHOD);
-    DJ_Init(&chassis.ChassisMotors[1], 2, M3508, PID_METHOD);
-    DJ_Init(&chassis.ChassisMotors[2], 3, M3508, PID_METHOD);
-    DJ_Init(&chassis.ChassisMotors[3], 4, M3508, PID_METHOD);
+    DJ_Init(&chassis.ChassisMotors[0], 1, M3508, PID_METHOD, &hcan1);
+    DJ_Init(&chassis.ChassisMotors[1], 2, M3508, PID_METHOD, &hcan1);
+    DJ_Init(&chassis.ChassisMotors[2], 3, M3508, PID_METHOD, &hcan1);
+    DJ_Init(&chassis.ChassisMotors[3], 4, M3508, PID_METHOD, &hcan1);
 
     DJ_SetSpeed(&chassis.ChassisMotors[0], chassis.Motors_Speed[0]);
     DJ_SetSpeed(&chassis.ChassisMotors[1], chassis.Motors_Speed[1]);

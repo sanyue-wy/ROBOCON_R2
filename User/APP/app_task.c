@@ -18,12 +18,12 @@ void App_Task_Init(void)
  lift_table_init();
 
 
- // //三自由度吸盘初始化
- // dev_3dof_sc_init();
- //
- // //气动手指部分初始化
- // air_finger_init();
- // Servo_Init();
+ //三自由度吸盘初始化
+ dev_3dof_sc_init();
+
+ //气动手指部分初始化
+ air_finger_init();
+ Servo_Init();
 
 //通讯初始化
  usb_pc_init();
@@ -134,7 +134,8 @@ if ( usb_pc_run(&current_command))
   }
    break;
  case CAR_DOFF:
-  dev_3dof_sc_angle(&sc_motor[0], current_command.data);
+  if (current_command.data>140) current_command.data = 140;
+  dev_3dof_sc_angle(&sc_motor[0], 140-current_command.data);
   if (flag_send)
   {
    flag_send = false;
@@ -181,7 +182,7 @@ if ( usb_pc_run(&current_command))
   }
   break;
   case CAR_TABLE_UP:
-   lift_table_run(current_command.data);
+   lift_table_run(-current_command.data);
   if (flag_send)  {
    flag_send = false;
    Transmit_to_PC((uint8_t *)"table up\n", 10);
@@ -190,7 +191,7 @@ if ( usb_pc_run(&current_command))
 
 
   case CAR_TABLE_DOWN:
-   lift_table_run(-current_command.data);
+   lift_table_run(current_command.data);
   if (flag_send)  {
    flag_send = false;
    Transmit_to_PC((uint8_t *)"table down\n", 12);
@@ -219,8 +220,9 @@ if ( usb_pc_run(&current_command))
   break;
  case CAR_FINGER_WRIST:
 
-  if (current_command.data > 180) current_command.data = 180;
-  Servo_SetAngle_135(TIM_CHANNEL_1, current_command.data-90);
+  if (current_command.data > 180)
+  {current_command.data = 180;}
+  Servo_SetAngle_135(TIM_CHANNEL_1, 90-current_command.data);
   if (flag_send)
   {
    flag_send = false;
@@ -244,7 +246,6 @@ if ( usb_pc_run(&current_command))
 
 
 }
-
 
 
 
