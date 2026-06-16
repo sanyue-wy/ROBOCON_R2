@@ -38,7 +38,7 @@ static uint8_t CAN_Function_Count = 0;      // 函数数量
 static CAN_Interrupt_t *CAN_ItSource_Array; // CAN中断回调函数结构体数组指针
 
 // 联接CAN中断源和中断回调函数
-void AttachInterrupt_CAN(CAN_HandleTypeDef *hcan, void (*CAN_Callback)(CAN_RxHeaderTypeDef *pHeader, uint8_t *pBuf),uint32_t FilterBank)
+void AttachInterrupt_CAN(CAN_HandleTypeDef *hcan, void (*CAN_Callback)(CAN_RxHeaderTypeDef *pHeader, uint8_t *pBuf), uint32_t FilterBank)
 {
     CAN_Interrupt_t *tmp = (CAN_Interrupt_t *)realloc(CAN_ItSource_Array, (CAN_Function_Count + 1) * sizeof(CAN_Interrupt_t));
     if (tmp == NULL) return; // 分配失败,放弃注册
