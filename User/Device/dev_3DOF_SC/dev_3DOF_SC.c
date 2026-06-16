@@ -9,11 +9,11 @@ DJ_Motor_t sc_motor[3];
 
 void dev_3dof_sc_init(void)
 {
-    AttachInterrupt_CAN(&hcan2, DJ_CAN_Callback,15);
 
-    DJ_Init(&sc_motor[0], 1, M3508, PID_METHOD, &hcan2);
-    DJ_Init(&sc_motor[1], 2, M3508, PID_METHOD, &hcan2);
-    DJ_Init(&sc_motor[2], 3, M3508, PID_METHOD, &hcan2);
+
+    DJ_Init(&sc_motor[0], 6, M3508, PID_METHOD);
+    DJ_Init(&sc_motor[1], 7, M3508, PID_METHOD);
+    DJ_Init(&sc_motor[2], 8, M3508, PID_METHOD);
 
     DJ_SetAngle(&sc_motor[0], 0,4000);
    DJ_SetAngle(&sc_motor[1], 0,4000);

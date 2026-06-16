@@ -12,19 +12,23 @@ Remote_control_struct Remote_control_FS;
 
 void Remote_callback(uint8_t *data, uint16_t size)
 {
-    if (Rx_buf[0] == SBUS_START && Rx_buf[24] == SBUS_END)
+    if (size < 25)
+        goto rearm;
+
+    if (data[0] == SBUS_START && data[24] == SBUS_END)
     {
         /********SBUS协议解码 - FS-i6X遥控器**********/
-        Remote_control_FS.Right_X = (uint16_t)((Rx_buf[1] | Rx_buf[2] << 8) & 0x07FF);
-        Remote_control_FS.Right_Y = (uint16_t)((Rx_buf[2] >> 3 | Rx_buf[3] << 5) & 0x07FF);
-        Remote_control_FS.Left_Y  = (uint16_t)((Rx_buf[3] >> 6 | Rx_buf[4] << 2 | Rx_buf[5] << 10) & 0x07FF);
-        Remote_control_FS.Left_X  = (uint16_t)((Rx_buf[5] >> 1 | Rx_buf[6] << 7) & 0x07FF);
-        Remote_control_FS.VRA     = (uint16_t)((Rx_buf[6] >> 4 | Rx_buf[7] << 4) & 0x07FF);
-        Remote_control_FS.VRB     = (uint16_t)((Rx_buf[7] >> 7 | Rx_buf[8] << 1 | Rx_buf[9] << 9) & 0x07FF);
-        Remote_control_FS.SWA     = (uint16_t)((Rx_buf[9] >> 2 | Rx_buf[10] << 6) & 0x07FF);
-        Remote_control_FS.SWB     = (uint16_t)((Rx_buf[10] >> 5 | Rx_buf[11] << 3) & 0x07FF);
-        Remote_control_FS.SWC     = (uint16_t)((Rx_buf[12] | Rx_buf[13] << 8) & 0x07FF);
-        Remote_control_FS.SWD     = (uint16_t)((Rx_buf[13] >> 3 | Rx_buf[14] << 5) & 0x07FF);
+        Remote_control_FS.Right_X = (uint16_t)((data[1] | data[2] << 8) & 0x07FF);
+        Remote_control_FS.Right_Y = (uint16_t)((data[2] >> 3 | data[3] << 5) & 0x07FF);
+        Remote_control_FS.Left_Y  = (uint16_t)((data[3] >> 6 | data[4] << 2 | data[5] << 10) & 0x07FF);
+        Remote_control_FS.Left_X  = (uint16_t)((data[5] >> 1 | data[6] << 7) & 0x07FF);
+        Remote_control_FS.VRA     = (uint16_t)((data[6] >> 4 | data[7] << 4) & 0x07FF);
+        Remote_control_FS.VRB     = (uint16_t)((data[7] >> 7 | data[8] << 1 | data[9] << 9) & 0x07FF);
+        Remote_control_FS.SWA     = (uint16_t)((data[9] >> 2 | data[10] << 6) & 0x07FF);
+        Remote_control_FS.SWB     = (uint16_t)((data[10] >> 5 | data[11] << 3) & 0x07FF);
+        Remote_control_FS.SWC     = (uint16_t)((data[12] | data[13] << 8) & 0x07FF);
+        Remote_control_FS.SWD     = (uint16_t)((data[13] >> 3 | data[14] << 5) & 0x07FF);
     }
+rearm:
     HAL_UARTEx_ReceiveToIdle_DMA(&SBUS_UART, Rx_buf, Rx_buf_size);
 }

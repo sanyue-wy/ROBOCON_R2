@@ -50,7 +50,6 @@ extern "C"
         uint16_t last_angle; // 上一次读取的角度
 
         uint16_t ID;                // 电机的ID
-        CAN_HandleTypeDef *can_bus; // 电机所在的CAN总线
         DJ_MotorType_e type;        // 电机类型
         DJ_MotorMode_e mode;        // 控制模式
         int16_t dec;                // 减速比
@@ -74,14 +73,14 @@ extern "C"
     extern DJ_Motor_t chassis_Motor[4];
 
 #ifdef HAL_CAN_MODULE_ENABLED
-    void DJ_CAN_Callback(CAN_HandleTypeDef *hcan, CAN_RxHeaderTypeDef *pHeader, uint8_t *pBuf);
+    void DJ_CAN_Callback(CAN_RxHeaderTypeDef *pHeader, uint8_t *pBuf);
 #endif
 
 #ifdef HAL_FDCAN_MODULE_ENABLED
-    void DJ_CAN_Callback(CAN_HandleTypeDef *hcan, FDCAN_RxHeaderTypeDef *pHeader, uint8_t *pBuf);
+    void DJ_CAN_Callback(FDCAN_RxHeaderTypeDef *pHeader, uint8_t *pBuf);
 #endif
 
-    void DJ_Init(DJ_Motor_t *motor, uint8_t Motor_ID, DJ_MotorType_e Motor_Type, DJ_ControllMethod_e method, CAN_HandleTypeDef *hcan);
+    void DJ_Init(DJ_Motor_t *motor, uint8_t Motor_ID, DJ_MotorType_e Motor_Type, DJ_ControllMethod_e method);
     void DJ_MotorRun(void);
     void DJ_ClearAngle(DJ_Motor_t *motor);
 

@@ -82,11 +82,24 @@ car_lift_init();
 #endif
 
 #if dji_motor_debug==1
-    AttachInterrupt_CAN(&hcan1, DJ_CAN_Callback);
-    DJ_Init(&DJ_Motor3508[0], 1, M3508, PID_METHOD, &hcan1);
-    DJ_SetSpeed(&DJ_Motor3508[0],0);
-    AttachInterrupt_TIM(&htim2, TASK_1MS_TIM_callback);
-    HAL_TIM_Base_Start_IT(&htim1);
+
+    //底盘初始化
+    Chassis_Init();
+    //升降台
+    lift_table_init();
+    //三自由度吸盘初始化
+    dev_3dof_sc_init();
+    HAL_Delay(4000);
+
+    DJ_SetSpeed(&chassis.ChassisMotors[0], 1000);
+    // DJ_SetSpeed(&chassis.ChassisMotors[1], chassis.Motors_Speed[1]);
+    // DJ_SetSpeed(&chassis.ChassisMotors[2], chassis.Motors_Speed[2]);
+    // DJ_SetSpeed(&chassis.ChassisMotors[3], chassis.Motors_Speed[3]);
+
+    //vofa初始化
+    //AttachInterrupt_UART_DMA(&huart1,DataBuff,200,Vofa_Callback);
+
+
 #endif
 
 
@@ -190,6 +203,10 @@ vofa_FloatSend(a,5);
 #endif
 
 #if dji_motor_debug==1
+     //uart_pid_to_pid_update(&chassis.ChassisMotors[0].PID_Speed.Kp,&chassis.ChassisMotors[0].PID_Speed.Ki,&chassis.ChassisMotors[0].PID_Speed.Kd,&chassis.ChassisMotors[0].setSpeed,0);
+    // float a[5]={chassis.ChassisMotors[0].PID_Speed.Kp,chassis.ChassisMotors[0].PID_Speed.Ki,chassis.ChassisMotors[0].PID_Speed.Ki,chassis.ChassisMotors[0].setSpeed,chassis.ChassisMotors[0].speed};
+     //vofa_FloatSend(a,5);
+
 
 #endif
 

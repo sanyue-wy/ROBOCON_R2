@@ -19,23 +19,23 @@ void MM_TIM_Callback(void)
 }
 void TASK_1MS_TIM_callback(void)
 {
-
-
-
-    DJ_MotorRun();
-
-
-
+    /* DJ_MotorRun 已移至 Task_it_callback (3ms周期) */
 }
 
 void Task_it_callback(void)
 {
-    static uint16_t count;
-    DJ_MotorRun();
-
-    if (count++ > 1000)
+    static uint16_t count1=0;
+    static uint16_t count2=0;
+    if (++count2>=2)
     {
-        count = 0;
+        count2 = 0;
+        DJ_MotorRun();
+    }
+
+
+    if (++count1 >=1000)
+    {
+        count1 = 0;
         HAL_GPIO_TogglePin(GPIOH, GPIO_PIN_10);
     }
 
