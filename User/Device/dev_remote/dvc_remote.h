@@ -3,6 +3,7 @@
 
 #include "main.h"
 #include "drv_usart.h"
+#include "dev_pc.h"
 
 #define SBUS_UART huart3
 

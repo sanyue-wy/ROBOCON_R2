@@ -19,7 +19,7 @@ void dev_3dof_sc_init(void)
    DJ_SetAngle(&sc_motor[1], 0,4000);
    DJ_SetAngle(&sc_motor[2], 0,4000);
 
-    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, GPIO_PIN_RESET);
 
     }
 
@@ -30,9 +30,9 @@ void dev_3dof_sc_angle(DJ_Motor_t *motor, float angle)
 
 void dev_3dof_sc_suck_vacuum(void)
 {
-    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, GPIO_PIN_SET);
 }
 void dev_3dof_sc_suck_blow(void)
 {
-    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, GPIO_PIN_RESET);
 }

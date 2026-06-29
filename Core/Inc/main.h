@@ -59,8 +59,6 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define HALL_SENSOR_PIN2_Pin GPIO_PIN_7
 #define HALL_SENSOR_PIN2_GPIO_Port GPIOI
-#define HALL_SENSOR_PIN1_Pin GPIO_PIN_6
-#define HALL_SENSOR_PIN1_GPIO_Port GPIOI
 #define LASER_Pin GPIO_PIN_8
 #define LASER_GPIO_Port GPIOC
 #define RSTN_IST8310_Pin GPIO_PIN_6

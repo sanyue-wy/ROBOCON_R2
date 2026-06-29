@@ -21,16 +21,54 @@ void Chassis_Init(void)
 
 #endif
 
-    /* 底盘角度pid */
-    PID_Init(&chassis.pid, 0.05, 0, 0, 1, 0);
+    /* 底盘航向pid: kp=1.5, ki=0, kd=0.3, max_out=3.0(rad/s), max_iout=0.5 */
+    PID_Init(&chassis.pid, 1.5f, 0.0f, 0.3f, 3.0f, 0.5f);
 }
 
 inline void Chassis_Run(void)
 {
 #if MOTOR_ON
-    Chassis_SetSpeed(chassis.setVx, chassis.setVy, chassis.setVw);
+    Chassis_SetSpeed(chassis.setVx, chassis.setVy, chassis.setVw + chassis.pid.out);
     DJ_MotorRun();
 #endif
+}
+
+/**
+ * 航向PID计算 — 仅读 INS.YawTotalAngle + 一次 PID_Calc，极轻量(~200 cycles)
+ * 在定时器中与 DJ_MotorRun 同步调用(500Hz)
+ */
+void Chassis_YawControl(void)
+{
+    if (chassis.heading_lock)
+    {
+        PID_Calc(&chassis.pid, INS.YawTotalAngle, chassis.targetYaw);
+    }
+    else
+    {
+        chassis.pid.out = 0.0f;
+    }
+}
+
+/**
+ * 锁定当前航向
+ * enable=1: 记录当前 YawTotalAngle 为目标，开始闭环
+ * enable=0: 解除锁定，回到开环
+ */
+void Chassis_SetHeadingLock(uint8_t enable)
+{
+    if (enable)
+        chassis.targetYaw = INS.YawTotalAngle;
+    chassis.heading_lock = enable;
+    chassis.pid.out = 0.0f;
+}
+
+/**
+ * 旋转到指定角度（绝对角度，单位：度）
+ */
+void Chassis_SetTargetAngle(float angle_deg)
+{
+    chassis.targetYaw = angle_deg;
+    chassis.heading_lock = 1;
 }
 
 /**
@@ -45,10 +83,10 @@ void Chassis_SetSpeed(float Vx, float Vy, float Vw)
 
 
 
-    chassis.Motors_Speed[0] = (int16_t)((-Vx-Vy-Vp) / PI / RADIUS *60 * DECRATIO);
-    chassis.Motors_Speed[1] = (int16_t)((Vx-Vy-Vp) / PI / RADIUS *60 * DECRATIO);
-    chassis.Motors_Speed[2] = (int16_t)((-Vx+Vy-Vp) / PI / RADIUS *60 * DECRATIO);
-    chassis.Motors_Speed[3] = (int16_t)((Vx+Vy-Vp) / PI / RADIUS *60 * DECRATIO);
+    chassis.Motors_Speed[0] = (int16_t)((-Vx-Vy*(1+G_COMPENSATION)-Vp) / PI / RADIUS *60 * DECRATIO);
+    chassis.Motors_Speed[1] = (int16_t)((Vx-Vy*(1+G_COMPENSATION)-Vp) / PI / RADIUS *60 * DECRATIO);
+    chassis.Motors_Speed[2] = (int16_t)((-Vx+Vy*(1-G_COMPENSATION)-Vp) / PI / RADIUS *60 * DECRATIO);
+    chassis.Motors_Speed[3] = (int16_t)((Vx+Vy*(1-G_COMPENSATION)-Vp) / PI / RADIUS *60 * DECRATIO);
 
 #if MOTOR_ON
     DJ_SetSpeed(&chassis.ChassisMotors[0], chassis.Motors_Speed[0]);

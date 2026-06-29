@@ -6,6 +6,8 @@
 #include "dev_3DOF_SC.h"
 #include "dev_lift_table/dev_lift_table.h"
 #include "dev_air_finger/dev_air_finger.h"
+#include "bsp_dwt.h"
+#include "spi.h"
 
 extern pc_command_t current_cmd;
 //

@@ -3,6 +3,7 @@
 //
 
 #include "task_it.h"
+#include "Chassis.h"
 /* 毫秒定时器 */
 void MM_TIM_Callback(void)
 {
@@ -29,6 +30,7 @@ void Task_it_callback(void)
     if (++count2>=2)
     {
         count2 = 0;
+        Chassis_YawControl();  // 航向PID（~200 cycles）
         DJ_MotorRun();
     }
 

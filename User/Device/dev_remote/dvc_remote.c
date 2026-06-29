@@ -32,3 +32,79 @@ void Remote_callback(uint8_t *data, uint16_t size)
 rearm:
     HAL_UARTEx_ReceiveToIdle_DMA(&SBUS_UART, Rx_buf, Rx_buf_size);
 }
+static bool remote_ansys(pc_command_t *out)
+{
+
+    //遥感控制运动
+    if (Remote_control_FS.SWA > 1024)
+    {
+        if (Remote_control_FS.Right_Y > 1024)
+        {
+            out->motion = CAR_FORWARD;
+            out->data = Remote_control_FS.Right_Y-1024;
+        }
+        else if (Remote_control_FS.Right_Y < 1024)
+        {
+            out->motion = CAR_BACKWARD;
+            out->data = Remote_control_FS.Right_Y;
+        }
+        else
+            out->motion = CAR_STOP;
+        if (Remote_control_FS.Right_X > 1024)
+        {
+            out->motion = CAR_TRANSLATE_RIGHT;
+            out->data = Remote_control_FS.Right_X-1024;
+        }
+        else if (Remote_control_FS.Right_X < 1024)
+        {
+            out->motion = CAR_TRANSLATE_LEFT;
+            out->data = Remote_control_FS.Right_X;
+        }
+        else
+            out->motion = CAR_STOP;
+        if (Remote_control_FS.Left_X > 1024)
+        {
+            out->motion = CAR_TURN_RIGHT;
+            out->data = Remote_control_FS.Left_X-1024;
+        }
+        else if (Remote_control_FS.Left_X < 1024)
+        {
+            out->motion = CAR_TURN_LEFT;
+            out->data = Remote_control_FS.Left_X;
+        }
+        else
+            out->motion = CAR_STOP;
+
+        //夹取端头的程序
+        if ( Remote_control_FS.SWB>1700)
+        {
+            if ( 200<Remote_control_FS.Left_Y&&Remote_control_FS.Left_Y<700)
+            {
+                out->motion =CAR_FINGER;
+                out->data =44444;
+            }
+            if ( 700<Remote_control_FS.Left_Y&&Remote_control_FS.Left_Y<1200)
+            {
+                out->motion =CAR_FINGER;
+                out->data =55555;
+                HAL_Delay(500);
+                out->motion=CAR_FINGER_WRIST;
+                out->data=180;
+            }
+            if ( 1500<Remote_control_FS.Left_Y&&Remote_control_FS.Left_Y<1800)
+            {
+                out->motion =CAR_FINGER;
+                out->data =44444;
+                HAL_Delay(500);
+                out->motion=CAR_FINGER_WRIST;
+                out->data=90;
+            }
+        }
+
+    }
+
+
+
+    else
+        out->motion = CAR_STOP;
+}

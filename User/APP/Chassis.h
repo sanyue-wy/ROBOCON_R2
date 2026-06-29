@@ -13,6 +13,7 @@
 #define CHASSIS_H
 #include "dvc_dji_motor.h"
 #include "FastMathFunctions.h"
+#include "ins_task.h"
 
 #define REMOTE_ON 1
 #define MOTOR_ON 1
@@ -21,6 +22,7 @@
 #define RADIUS 0.152f // 轮子直径
 #define LENGTH 0.4518f // 底盘半长
 #define WIDTH 0.45f  // 底盘半宽
+#define G_COMPENSATION 0.04f // 实际重心与理论重心偏移造成前后轮平移误差补偿
 #define RR 0.6377f   // 轮子到中心的距离
 #define DECRATIO 19   // 电机减速比
 
@@ -49,6 +51,9 @@ typedef  struct
 
     chassis_ctrl_e ctrlMode;
 
+    float targetYaw;       // 目标航向角 (度，来自 INS.YawTotalAngle)
+    uint8_t heading_lock;  // 航向锁定: 1=闭环保持, 0=开环
+
 } chassis_t;
 
 extern  chassis_t chassis;
@@ -56,6 +61,11 @@ extern  chassis_t chassis;
 void Chassis_Init(void);
 void Chassis_Run(void);
 void Chassis_SetSpeed(float Vx, float Vy, float Vw);
+
+// 航向闭环接口
+void Chassis_SetHeadingLock(uint8_t enable);     // 锁定/解锁当前航向
+void Chassis_SetTargetAngle(float angle_deg);    // 旋转到指定绝对角度
+void Chassis_YawControl(void);                   // 航向PID计算（定时器中调用）
 
 
 

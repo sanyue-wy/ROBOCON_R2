@@ -8,6 +8,12 @@ void App_Task_Init(void)
  AttachInterrupt_TIM(&htim7, Task_it_callback);
  HAL_TIM_Base_Start_IT(&htim7);
 
+// IMU 初始化
+ DWT_Init(168);
+ while (BMI088_init(&hspi1, 1) != BMI088_NO_ERROR)
+     ;
+ INS_Init();
+
 //抬升机构初始化
  car_lift_init();
 
@@ -35,12 +41,36 @@ void App_Task_Init(void)
 
 void App_Task_Run(void)
 {
+ // ---- INS 姿态解算：DWT 计时，≥2ms 调用一次 ----
+ static uint32_t ins_tick = 0;
+ if (DWT_GetDeltaT64(&ins_tick) >= 0.002f)
+ {
+     INS_Task();
+ }
+
  static car_motion_t last_motion = CAR_STOP;
  static uint16_t  last_data=0;
 if ( usb_pc_run(&current_command))
 {
  if (current_command.motion != last_motion)
  {
+  // 航向锁定：直行时锁定，旋转/停止时解锁
+  switch (current_command.motion)
+  {
+   case CAR_FORWARD:
+   case CAR_BACKWARD:
+   case CAR_TRANSLATE_LEFT:
+   case CAR_TRANSLATE_RIGHT:
+    Chassis_SetHeadingLock(1);
+    break;
+   case CAR_STOP:
+   case CAR_TURN_LEFT:
+   case CAR_TURN_RIGHT:
+   default:
+    Chassis_SetHeadingLock(0);
+    break;
+  }
+
   last_motion = current_command.motion;
   flag_send = true;
  }
