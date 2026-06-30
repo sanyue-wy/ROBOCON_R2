@@ -9,6 +9,7 @@
 #include "bsp_dwt.h"
 #include "spi.h"
 #include "dvc_remote.h"
+#include "dev_vofa.h"
 
 #define remote_control 1
 #define pc_control 0

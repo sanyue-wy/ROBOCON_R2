@@ -43,6 +43,7 @@ void App_Task_Init(void)
 
 #if remote_control==1
  Remote_Init();
+ AttachInterrupt_UART_DMA(&huart1,DataBuff,200,Vofa_Callback);
 #endif
 
 }
@@ -282,7 +283,7 @@ void App_Task_Run(void)
   {
    // ========== 运动控制（优先级最高） ==========
    // Right_Y → 前后 (速度0~10000, 映射到0~1.592m/s)
-   if(Remote_control_FS.Left_X !=1024)
+   if(Remote_control_FS.Left_X <1000&&Remote_control_FS.Left_Y >1100)
    {
     Chassis_SetHeadingLock(0);
     float vw=(float)((int16_t)Remote_control_FS.Right_Y-1024)/1400.0f*ANGULAR_VELOCITY_MAX;
@@ -373,7 +374,8 @@ void App_Task_Run(void)
    pre_left_y = Remote_control_FS.Left_Y;
   }
 
-
+  float a[10]={Remote_control_FS.Left_X,Remote_control_FS.Left_Y,Remote_control_FS.Right_X,Remote_control_FS.Right_Y,Remote_control_FS.SWA,Remote_control_FS.SWB,Remote_control_FS.SWC,Remote_control_FS.SWD,Remote_control_FS.VRA,Remote_control_FS.VRB};
+  vofa_FloatSend(a,10);
 
 #endif
 
