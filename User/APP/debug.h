@@ -33,10 +33,10 @@
 
 // @deprecated 测试模式 - 请使用 app_task.h 中的 APP_ENABLE_xxx 宏
 #define vofa_debug 0
-#define dji_motor_debug 1
+#define dji_motor_debug 0
 #define imu_debug 0
 #define lift_debug 0
-#define remote_debug 0
+#define remote_debug 1
 #define  USB_debug 0
 #define  pc_debug 0
 #define  air_finger_wrist_debug 0

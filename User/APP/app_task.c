@@ -1,6 +1,56 @@
 #include "app_task.h"
+#if remote_control==1
+/**
+ * @brief SBUS值映射到速度范围 0~10000
+ * @param sbus_val SBUS原始值 (240~1807)
+ * @param center 中心值 (通常1024)
+ * @return 映射后的速度值 0~10000
+ *
+ * 速度映射: 0~10000 → 0~1.592m/s (平移/前后)
+ *           0~10000 → 0~2.49rad/s (旋转)
+ */
+static uint16_t map_speed(uint16_t sbus_val, uint16_t center)
+{
+    int16_t dev = (int16_t)sbus_val - (int16_t)center;
+    if (dev < 0) dev = -dev;
+    if (dev > 780) dev = 780; // SBUS最大偏差约780
+    return (uint16_t)((uint32_t)dev * 10000 / 780);
+}
 
+/**
+ * @brief SBUS值映射到角度范围 0~90度
+ * @param sbus_val SBUS原始值 (240~1807)
+ * @return 映射后的角度值 0~90
+ *
+ * 用于DOF三自由度: 0~90度 → 映射到-45~45度
+ */
+static uint16_t map_angle_0_90(uint16_t sbus_val)
+{
+    if (sbus_val < 240) sbus_val = 240;
+    if (sbus_val > 1807) sbus_val = 1807;
+    return (uint16_t)((uint32_t)(sbus_val - 240) * 90 / (1807 - 240));
+}
+
+/**
+ * @brief SBUS值映射到舵机角度 0~180度
+ * @param sbus_val SBUS原始值 (240~1807)
+ * @return 映射后的角度值 0~180
+ *
+ * 用于FINGER_WRIST: 0~180度 → 映射到-90~90度
+ */
+static uint16_t map_angle_0_180(uint16_t sbus_val)
+{
+    if (sbus_val < 240) sbus_val = 240;
+    if (sbus_val > 1807) sbus_val = 1807;
+    return (uint16_t)((uint32_t)(sbus_val - 240) * 180 / (1807 - 240));
+}
+
+#endif
+
+
+#if pc_control==1
 bool flag_send=false;
+#endif
 
 void App_Task_Init(void)
 {
@@ -32,10 +82,13 @@ void App_Task_Init(void)
  Servo_Init();
 
 //通讯初始化
+#if pc_control==1
  usb_pc_init();
+ #endif
 
-
-
+#if remote_control==1
+ Remote_Init();
+#endif
 
 }
 
@@ -47,10 +100,15 @@ void App_Task_Run(void)
  {
      INS_Task();
  }
-
+#if pc_control==1
  static car_motion_t last_motion = CAR_STOP;
  static uint16_t  last_data=0;
-if ( usb_pc_run(&current_command))
+
+
+
+
+ if (  usb_pc_run(&current_command);)
+
 {
  if (current_command.motion != last_motion)
  {
@@ -74,7 +132,7 @@ if ( usb_pc_run(&current_command))
   last_motion = current_command.motion;
   flag_send = true;
  }
- else (current_command.data != last_data);
+ else if (current_command.data != last_data)
  {
   last_data = current_command.data;
   flag_send = true;
@@ -87,6 +145,7 @@ if ( usb_pc_run(&current_command))
   if (flag_send)
   {
    flag_send = false;
+
    Transmit_to_PC((uint8_t *)"Car stopped\n", 12);
 
   }
@@ -97,7 +156,6 @@ if ( usb_pc_run(&current_command))
   {
    flag_send = false;
    Transmit_to_PC((uint8_t *)"Car forward\n", 12);
-
   }
    break;
   case CAR_BACKWARD:
@@ -106,7 +164,6 @@ if ( usb_pc_run(&current_command))
   {
    flag_send = false;
    Transmit_to_PC((uint8_t *)"Car backward\n", 13);
-
   }
    break;
   case CAR_TURN_LEFT:
@@ -115,7 +172,6 @@ if ( usb_pc_run(&current_command))
   {
    flag_send = false;
    Transmit_to_PC((uint8_t *)"Car turn left\n", 14);
-
   }
    break;
   case CAR_TURN_RIGHT:
@@ -124,7 +180,6 @@ if ( usb_pc_run(&current_command))
   {
    flag_send = false;
    Transmit_to_PC((uint8_t *)"Car turn right\n", 15);
-
   }
    break;
   case CAR_TRANSLATE_LEFT:
@@ -133,7 +188,6 @@ if ( usb_pc_run(&current_command))
   {
    flag_send = false;
    Transmit_to_PC((uint8_t *)"Car translate left\n", 19);
-
   }
    break;
   case CAR_TRANSLATE_RIGHT:
@@ -142,7 +196,6 @@ if ( usb_pc_run(&current_command))
   {
    flag_send = false;
    Transmit_to_PC((uint8_t *)"Car translate right\n", 20);
-
   }
    break;
   case CAR_UP:
@@ -151,7 +204,6 @@ if ( usb_pc_run(&current_command))
   {
    flag_send = false;
    Transmit_to_PC((uint8_t *)"Car up\n", 7);
-
   }
    break;
   case CAR_DOWN:
@@ -160,17 +212,18 @@ if ( usb_pc_run(&current_command))
   {
    flag_send = false;
    Transmit_to_PC((uint8_t *)"Car down\n", 7);
-
   }
    break;
  case CAR_DOFF:
-  if (current_command.data>140) current_command.data = 140;
-  dev_3dof_sc_angle(&sc_motor[0], 140-current_command.data);
+  if (current_command.data > 180) current_command.data = 180;
+  if (current_command.data <= 90)
+      dev_3dof_sc_angle(&sc_motor[0], 140 - current_command.data);
+  else
+      dev_3dof_sc_angle(&sc_motor[0], 140 - (int16_t)(current_command.data - 90));
   if (flag_send)
   {
    flag_send = false;
    Transmit_to_PC((uint8_t *)"doff set\n", 10);
-
   }
   break;
  case CAR_DOFS:
@@ -179,7 +232,6 @@ if ( usb_pc_run(&current_command))
   {
    flag_send = false;
    Transmit_to_PC((uint8_t *)"dofs set\n", 10);
-
   }
   break;
  case CAR_DOFT:
@@ -188,7 +240,6 @@ if ( usb_pc_run(&current_command))
   {
    flag_send = false;
    Transmit_to_PC((uint8_t *)"doft set\n", 10);
-
   }
   break;
  case CAR_SUCK:
@@ -265,13 +316,11 @@ if ( usb_pc_run(&current_command))
   default:
    break;
  }
+ #endif
+}
+#if remote_control==1
 
-
-
-
-
-
- }
+#endif
 
 
 

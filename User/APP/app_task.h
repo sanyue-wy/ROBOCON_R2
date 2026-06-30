@@ -8,7 +8,10 @@
 #include "dev_air_finger/dev_air_finger.h"
 #include "bsp_dwt.h"
 #include "spi.h"
+#include "dvc_remote.h"
 
+#define remote_control 1
+#define pc_control 0
 extern pc_command_t current_cmd;
 //
 #define SPEED_MAX 1.592f // 单位m/s
