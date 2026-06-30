@@ -31,7 +31,7 @@ void Task_it_callback(void)
     {
         count2 = 0;
         Chassis_YawControl();  // 航向PID（~200 cycles）
-        DJ_MotorRun();
+        Chassis_Run();         // 应用航向PID修正 + 发送电机指令
     }
 
 

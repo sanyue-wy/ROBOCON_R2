@@ -28,7 +28,7 @@ void Chassis_Init(void)
 inline void Chassis_Run(void)
 {
 #if MOTOR_ON
-    Chassis_SetSpeed(chassis.setVx, chassis.setVy, chassis.setVw + chassis.pid.out);
+    Chassis_Speed(chassis.setVx, chassis.setVy, chassis.setVw + chassis.pid.out);
     DJ_MotorRun();
 #endif
 }
@@ -57,7 +57,9 @@ void Chassis_YawControl(void)
 void Chassis_SetHeadingLock(uint8_t enable)
 {
     if (enable)
+    {
         chassis.targetYaw = INS.YawTotalAngle;
+    }
     chassis.heading_lock = enable;
     chassis.pid.out = 0.0f;
 }
@@ -71,12 +73,20 @@ void Chassis_SetTargetAngle(float angle_deg)
     chassis.heading_lock = 1;
 }
 
+
+void Chassis_SetSpeed(float Vx, float Vy, float Vw)
+{
+    chassis.setVx = Vx;
+    chassis.setVy = Vy;
+    chassis.setVw = Vw;
+}
+
 /**
  * 设置底盘速度
  * 正方向为X轴，左方向为Y轴，m/s
  * 逆时针为正， rad/s
  */
-void Chassis_SetSpeed(float Vx, float Vy, float Vw)
+void Chassis_Speed(float Vx, float Vy, float Vw)
 {
    float Vp=Vw*(LENGTH + WIDTH);
 

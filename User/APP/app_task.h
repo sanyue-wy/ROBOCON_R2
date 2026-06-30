@@ -11,9 +11,9 @@
 #include "dvc_remote.h"
 #include "dev_vofa.h"
 
-#define remote_control 1
-#define pc_control 0
-extern pc_command_t current_cmd;
+#define remote_control 0
+#define pc_control 1
+extern pc_command_t current_command;
 //
 #define SPEED_MAX 1.592f // 单位m/s
 #define ANGULAR_VELOCITY_MAX 2.49f //  单位 rad/s

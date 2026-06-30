@@ -43,7 +43,7 @@ void App_Task_Init(void)
 
 #if remote_control==1
  Remote_Init();
- AttachInterrupt_UART_DMA(&huart1,DataBuff,200,Vofa_Callback);
+ //AttachInterrupt_UART_DMA(&huart1,DataBuff,200,Vofa_Callback);
 #endif
 
 }
@@ -63,8 +63,7 @@ void App_Task_Run(void)
 
 
 
- if (  usb_pc_run(&current_command);)
-
+ if (  usb_pc_run(&current_command))
  {
   if (current_command.motion != last_motion)
   {
@@ -272,17 +271,20 @@ void App_Task_Run(void)
   default:
    break;
   }
+ }
+
 #endif
 
 #if remote_control==1
 
   static uint16_t pre_left_y = 0;
+  static uint8_t pre_heading_lock = 0;
 
   // SWA总使能检查 - 必须拨上才工作
   if (Remote_control_FS.SWA > 1024)
   {
    // ========== 运动控制（优先级最高） ==========
-   // Right_Y → 前后 (速度0~10000, 映射到0~1.592m/s)
+   // 左摇杆左下(Left_X<1000 && Left_Y>1100)：旋转模式
    if(Remote_control_FS.Left_X <1000&&Remote_control_FS.Left_Y >1100)
    {
     Chassis_SetHeadingLock(0);
@@ -294,8 +296,14 @@ void App_Task_Run(void)
     float vx=(float)((int16_t)Remote_control_FS.Right_X-1024)/1400.0f*SPEED_MAX;
     float vy=(float)((int16_t)Remote_control_FS.Right_Y-1024)/1400.0f*SPEED_MAX;
     Chassis_SetSpeed(vx,vy,0);
-
    }
+   // 航向锁定仅在状态变化时调用（避免每帧重置pid.out）
+   if (chassis.heading_lock != pre_heading_lock)
+   {
+    Chassis_SetHeadingLock(chassis.heading_lock);
+    pre_heading_lock = chassis.heading_lock;
+   }
+
    // ========== SWC模式切换 ==========
    // SWC低（~240）：Left_Y控制夹爪
    if (Remote_control_FS.SWC < 400)
@@ -367,16 +375,22 @@ void App_Task_Run(void)
 
     }
    }
-
-
+   // SWC死区(400~900)：停车
    else
+   {
     Chassis_SetSpeed(0,0,0);
+   }
+
    pre_left_y = Remote_control_FS.Left_Y;
   }
+  // SWA关闭：立即停车
+  else
+  {
+   Chassis_SetSpeed(0,0,0);
+  }
 
-  float a[10]={Remote_control_FS.Left_X,Remote_control_FS.Left_Y,Remote_control_FS.Right_X,Remote_control_FS.Right_Y,Remote_control_FS.SWA,Remote_control_FS.SWB,Remote_control_FS.SWC,Remote_control_FS.SWD,Remote_control_FS.VRA,Remote_control_FS.VRB};
-  vofa_FloatSend(a,10);
+ //float a[10]={Remote_control_FS.Left_X,Remote_control_FS.Left_Y,Remote_control_FS.Right_X,Remote_control_FS.Right_Y,Remote_control_FS.SWA,Remote_control_FS.SWB,Remote_control_FS.SWC,Remote_control_FS.SWD,Remote_control_FS.VRA,Remote_control_FS.VRB};
+ //vofa_FloatSend(a,10);
 
 #endif
-
- }
+}

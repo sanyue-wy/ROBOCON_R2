@@ -61,6 +61,7 @@ extern  chassis_t chassis;
 void Chassis_Init(void);
 void Chassis_Run(void);
 void Chassis_SetSpeed(float Vx, float Vy, float Vw);
+void Chassis_Speed(float Vx, float Vy, float Vw);
 
 // 航向闭环接口
 void Chassis_SetHeadingLock(uint8_t enable);     // 锁定/解锁当前航向
