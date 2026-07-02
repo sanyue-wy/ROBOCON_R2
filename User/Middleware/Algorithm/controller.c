@@ -36,7 +36,7 @@ float PID_Calc(PID_t *pid, float fdb, float set)
 
     pid->Pout = pid->Kp * pid->err[0];
     pid->Iout += pid->Ki * pid->err[0];
-    pid->Dout = pid->Kd * pid->err[0] - pid->err[1];
+    pid->Dout = pid->Kd * (pid->err[0] - pid->err[1]);
 
     if (pid->Iout > pid->max_iout)
     {
@@ -106,7 +106,7 @@ float TDPID_Calc(TDPID_t *TDpid, float fdb, float set)
 
     TDpid->Pout = TDpid->Kp * TDpid->err[0];
     TDpid->Iout += TDpid->Ki * TDpid->err[0];
-    TDpid->Dout = TDpid->Kd * TDpid->err[0] - TDpid->err[1];
+    TDpid->Dout = TDpid->Kd * (TDpid->err[0] - TDpid->err[1]);
 
     if (TDpid->Iout > TDpid->max_iout)
     {
