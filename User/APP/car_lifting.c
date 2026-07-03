@@ -11,11 +11,11 @@ void car_lift_init(void)
 {
     car_end_lift_down();
     car_head_lift_down();
-
+    car_air_control_down();
 }
 void car_lift_up(void)
 {
-
+    car_air_control_up();
     // //前后抬升
     car_end_lift_up();
     car_head_lift_up();
@@ -72,3 +72,19 @@ void car_lift_down(void)
    //  HAL_Delay(1000);
 
 }
+
+void car_block_up(void)
+{
+    car_head_lift_up();
+    car_end_lift_up();
+
+}
+void car_block_down(void)
+{
+    car_head_lift_up();
+    car_end_lift_up();
+
+}
+
+
+

@@ -37,9 +37,9 @@ static car_motion_t parse_motion(const char *str)
     if (strncmp(str, "rtrn", 4) == 0) return CAR_TURN_RIGHT;  //速度数据给到0到10000,映射到0到2.49rad/s
     if (strncmp(str, "ltrl", 4) == 0) return CAR_TRANSLATE_LEFT;
     if (strncmp(str, "rtrl", 4) == 0) return CAR_TRANSLATE_RIGHT;
-    if (strncmp(str, "upwd", 4) == 0) return CAR_UP;
-    if (strncmp(str, "dwnd", 4) == 0) return CAR_DOWN;
-    if (strncmp(str, "taup", 4) == 0) return CAR_DOFF;     // 三自由度平台 后面角度单位度 范围0到90，映射到-45到45度（逆时针为正）
+    if (strncmp(str, "upwd", 4) == 0) return CAR_UP;        //44444为爬楼状态，55555为放物块的
+    if (strncmp(str, "dwnd", 4) == 0) return CAR_DOWN;      //44444为爬楼状态，55555为放物块的
+    if (strncmp(str, "doff", 4) == 0) return CAR_DOFF;     // 三自由度平台 后面角度单位度 范围0到90，映射到-45到45度（逆时针为正）
     if (strncmp(str, "dofs", 4) == 0) return CAR_DOFS;     //
     if (strncmp(str, "doft", 4) == 0) return CAR_DOFT;
     if (strncmp(str, "suck", 4) == 0) return CAR_SUCK;     //吸盘吸取物块  后面五位数据给55555为吸住，给44444为放下

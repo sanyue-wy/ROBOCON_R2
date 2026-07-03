@@ -10,6 +10,7 @@
 void car_lift_init(void);
 void car_lift_up(void);
 void car_lift_down(void);
-
+void car_block_up(void);
+void car_block_down(void);
 
 #endif //car_lifting_H

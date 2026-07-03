@@ -11,7 +11,7 @@ void dev_3dof_sc_init(void)
 {
 
 
-    DJ_Init(&sc_motor[0], 6, M3508, PID_METHOD);
+
     DJ_Init(&sc_motor[1], 7, M3508, PID_METHOD);
     DJ_Init(&sc_motor[2], 8, M3508, PID_METHOD);
 

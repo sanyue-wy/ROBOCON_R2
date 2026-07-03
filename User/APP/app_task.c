@@ -146,24 +146,46 @@ if ( usb_pc_run(&current_command))
   }
    break;
   case CAR_UP:
+  if (current_command.data == 55555)
+  {
+   car_block_up();
+   if (flag_send)
+   {
+    flag_send = false;
+    Transmit_to_PC((uint8_t *)"car block up\n", 13);
+   }
+  }
+  else if (current_command.data == 44444)
+  {
    car_lift_up();
-  if (flag_send)
-  {
-   flag_send = false;
-   Transmit_to_PC((uint8_t *)"Car up\n", 7);
-
+   if (flag_send)
+   {
+    flag_send = false;
+    Transmit_to_PC((uint8_t *)"car lift up\n", 12);
+   }
   }
-   break;
+  break;
   case CAR_DOWN:
-   car_lift_down();
-  if (flag_send)
+  if (current_command.data == 55555)
   {
-   flag_send = false;
-   Transmit_to_PC((uint8_t *)"Car down\n", 7);
-
+   car_block_down();
+   if (flag_send)
+   {
+    flag_send = false;
+    Transmit_to_PC((uint8_t *)"car block down\n", 15);
+   }
   }
-   break;
- case CAR_DOFF:
+  else if (current_command.data == 44444)
+  {
+   car_lift_down();
+   if (flag_send)
+   {
+    flag_send = false;
+    Transmit_to_PC((uint8_t *)"car lift down\n", 14);
+   }
+  }
+  break;
+ /*case CAR_DOFF:
   if (current_command.data>140) current_command.data = 140;
   dev_3dof_sc_angle(&sc_motor[0], 140-current_command.data);
   if (flag_send)
@@ -172,7 +194,7 @@ if ( usb_pc_run(&current_command))
    Transmit_to_PC((uint8_t *)"doff set\n", 10);
 
   }
-  break;
+  break;*/
  case CAR_DOFS:
   dev_3dof_sc_angle(&sc_motor[1], current_command.data);
   if (flag_send)

@@ -9,5 +9,6 @@ void car_head_lift_up(void);
 void car_end_lift_up(void);
 void car_head_lift_down(void);
 void car_end_lift_down(void);
-
+void car_air_control_up(void);
+void car_air_control_down(void);
 #endif //car_lifting_H
