@@ -39,14 +39,14 @@ static car_motion_t parse_motion(const char *str)
     if (strncmp(str, "rtrl", 4) == 0) return CAR_TRANSLATE_RIGHT;
     if (strncmp(str, "upwd", 4) == 0) return CAR_UP;        //44444为爬楼状态，55555为放物块的
     if (strncmp(str, "dwnd", 4) == 0) return CAR_DOWN;      //44444为爬楼状态，55555为放物块的
-    if (strncmp(str, "doff", 4) == 0) return CAR_DOFF;     // 三自由度平台 后面角度单位度 范围0到90，映射到-45到45度（逆时针为正）
+    // if (strncmp(str, "doff", 4) == 0) return CAR_DOFF;     // 三自由度平台 后面角度单位度 范围0到90，映射到-45到45度（逆时针为正）
     if (strncmp(str, "dofs", 4) == 0) return CAR_DOFS;     //
     if (strncmp(str, "doft", 4) == 0) return CAR_DOFT;
     if (strncmp(str, "suck", 4) == 0) return CAR_SUCK;     //吸盘吸取物块  后面五位数据给55555为吸住，给44444为放下
     if (strncmp(str, "taup", 4) == 0) return CAR_TABLE_UP;    //升降台  后面数据为上升距离 单位mm
     if (strncmp(str, "tadw", 4) == 0) return CAR_TABLE_DOWN;
     if (strncmp(str, "fing", 4) == 0) return CAR_FINGER;  //气动拇指夹取武器 后面五位数据给55555为夹取，给44444为放下
-    if (strncmp(str, "fwrs", 4) == 0) return CAR_FINGER_WRIST; //气动手指腕部舵机旋转角度，后面数据给0到180，映射到-90到90度,正的手指向上
+    if (strncmp(str, "fwrs", 4) == 0) return CAR_FINGER_WRIST; //气动手指腕部舵机旋转角度，后面数据给0到220，映射到-110到110度,正的手指向上
     return CAR_STOP;
 }
 

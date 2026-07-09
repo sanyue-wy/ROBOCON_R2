@@ -22,11 +22,11 @@
 #define RADIUS 0.152f // 轮子直径
 #define LENGTH 0.4518f // 底盘半长
 #define WIDTH 0.45f  // 底盘半宽
-#define G_COMPENSATION 0.04f // 实际重心与理论重心偏移造成前后轮平移误差补偿
+#define G_COMPENSATION 0.012f // 实际重心与理论重心偏移造成前后轮平移误差补偿
 #define RR 0.6377f   // 轮子到中心的距离
 #define DECRATIO 19   // 电机减速比
 
-
+#define DEG2RAD (3.1415926f / 180.0f)
 
 typedef enum
 {
@@ -61,6 +61,8 @@ extern  chassis_t chassis;
 void Chassis_Init(void);
 void Chassis_Run(void);
 void Chassis_SetSpeed(float Vx, float Vy, float Vw);
+void Chassis_Speed(float Vx, float Vy, float Vw);
+
 
 // 航向闭环接口
 void Chassis_SetHeadingLock(uint8_t enable);     // 锁定/解锁当前航向

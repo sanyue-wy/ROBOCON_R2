@@ -272,9 +272,9 @@ if ( usb_pc_run(&current_command))
   break;
  case CAR_FINGER_WRIST:
 
-  if (current_command.data > 180)
-  {current_command.data = 180;}
-  Servo_SetAngle_135(TIM_CHANNEL_1, 90-current_command.data);
+  if (current_command.data > 220)
+  {current_command.data = 220;}
+  Servo_SetAngle_135(TIM_CHANNEL_1, 110-current_command.data);
   if (flag_send)
   {
    flag_send = false;

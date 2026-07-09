@@ -21,27 +21,28 @@ void Chassis_Init(void)
 
 #endif
 
-    /* 底盘航向pid: kp=1.5, ki=0, kd=0.3, max_out=3.0(rad/s), max_iout=0.5 */
-    PID_Init(&chassis.pid, 1.5f, 0.0f, 0.3f, 3.0f, 0.5f);
+
+    PID_Init(&chassis.pid, 2.0f, 0.0f, 0.3f, 3.0f, 0.5f);
 }
 
-inline void Chassis_Run(void)
+ void Chassis_Run(void)
 {
 #if MOTOR_ON
-    Chassis_SetSpeed(chassis.setVx, chassis.setVy, chassis.setVw + chassis.pid.out);
-    DJ_MotorRun();
+    Chassis_Speed(chassis.setVx, chassis.setVy, chassis.setVw + chassis.pid.out);
 #endif
 }
 
 /**
  * 航向PID计算 — 仅读 INS.YawTotalAngle + 一次 PID_Calc，极轻量(~200 cycles)
- * 在定时器中与 DJ_MotorRun 同步调用(500Hz)
+ *
  */
 void Chassis_YawControl(void)
 {
     if (chassis.heading_lock)
     {
-        PID_Calc(&chassis.pid, INS.YawTotalAngle, chassis.targetYaw);
+        float current = INS.YawTotalAngle * DEG2RAD;
+        float target  = chassis.targetYaw * DEG2RAD;
+        PID_Calc(&chassis.pid, current, target);
     }
     else
     {
@@ -71,12 +72,19 @@ void Chassis_SetTargetAngle(float angle_deg)
     chassis.heading_lock = 1;
 }
 
+void Chassis_SetSpeed(float Vx, float Vy, float Vw)
+{
+    chassis.setVx = Vx;
+    chassis.setVy = Vy;
+    chassis.setVw = Vw;
+}
+
 /**
  * 设置底盘速度
  * 正方向为X轴，左方向为Y轴，m/s
  * 逆时针为正， rad/s
  */
-void Chassis_SetSpeed(float Vx, float Vy, float Vw)
+void Chassis_Speed(float Vx, float Vy, float Vw)
 {
    float Vp=Vw*(LENGTH + WIDTH);
 

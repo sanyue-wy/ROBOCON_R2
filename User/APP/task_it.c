@@ -27,10 +27,17 @@ void Task_it_callback(void)
 {
     static uint16_t count1=0;
     static uint16_t count2=0;
+    static uint16_t count3=0;
+    if (++count3>=5)
+    {
+        count3 = 0;
+        Chassis_YawControl();  // 航向PID（~200 cycles）
+       Chassis_Run();
+    }
+
     if (++count2>=2)
     {
         count2 = 0;
-        Chassis_YawControl();  // 航向PID（~200 cycles）
         DJ_MotorRun();
     }
 
