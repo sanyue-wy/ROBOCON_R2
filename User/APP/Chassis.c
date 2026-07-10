@@ -1,4 +1,5 @@
 #include "Chassis.h"
+#include "wheeled_odometer.h"
 
 
 chassis_t chassis;//底盘参数体
@@ -96,3 +97,11 @@ void Chassis_SetSpeed(float Vx, float Vy, float Vw)
 #endif
 }
 
+
+/**
+ * @brief  底盘里程计更新封装
+ */
+void Chassis_Odometer_Update(void)
+{
+    Odometer_Update();
+}

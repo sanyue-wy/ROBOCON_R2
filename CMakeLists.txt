@@ -72,6 +72,7 @@ add_executable(${CMAKE_PROJECT_NAME}
         User/Device/dev_3DOF_SC/dev_3DOF_SC.c
         User/Device/dev_air_finger/dev_air_finger.c
         User/Device/dev_lift_table/dev_lift_table.c
+        User/APP/wheeled_odometer.c
 )
 
 # Add STM32CubeMX generated sources
