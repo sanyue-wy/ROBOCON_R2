@@ -15,7 +15,7 @@ void car_lift_init(void)
 }
 void car_lift_up(void)
 {
-    car_air_control_up();
+
     // //前后抬升
     car_end_lift_up();
     car_head_lift_up();

@@ -209,7 +209,7 @@ void DJ_MotorRun(void)
 #ifdef HAL_FDCAN_MODULE_ENABLED
     while (HAL_FDCAN_GetTxFifoFreeLevel(&DJ_MOTOR_CAN) == 0)
         continue;
-    FDCAN_Transmit(&DJ_MOTOR_CAN, DJ_H_ID, data);
+    FDCAN_Transmit(&DJ_MOTOR_CAN, DJ_H_ID, data);yhj
 #endif
 }
 

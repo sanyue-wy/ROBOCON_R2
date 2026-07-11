@@ -185,16 +185,27 @@ if ( usb_pc_run(&current_command))
    }
   }
   break;
- /*case CAR_DOFF:
-  if (current_command.data>140) current_command.data = 140;
-  dev_3dof_sc_angle(&sc_motor[0], 140-current_command.data);
-  if (flag_send)
-  {
-   flag_send = false;
-   Transmit_to_PC((uint8_t *)"doff set\n", 10);
+ case CAR_AIR_BREAK:
 
+  if (current_command.data == 55555)
+  {
+   car_air_control_up();
+   if (flag_send)
+   {
+    flag_send = false;
+    Transmit_to_PC((uint8_t *)"car air break up\n", 17);
+   }
   }
-  break;*/
+  else if (current_command.data == 44444)
+  {
+   car_air_control_down();
+   if (flag_send)
+   {
+    flag_send = false;
+    Transmit_to_PC((uint8_t *)"car air break down\n", 19);
+   }
+  }
+  break;
  case CAR_DOFS:
   dev_3dof_sc_angle(&sc_motor[1], current_command.data);
   if (flag_send)
@@ -205,7 +216,7 @@ if ( usb_pc_run(&current_command))
   }
   break;
  case CAR_DOFT:
-  dev_3dof_sc_angle(&sc_motor[2], current_command.data);
+  dev_3dof_sc_angle(&sc_motor[2], 180-current_command.data);
   if (flag_send)
   {
    flag_send = false;
