@@ -48,6 +48,23 @@ void App_Task_Run(void)
      INS_Task();
  }
 
+ // ---- 底盘断电检测：状态机门控 ----
+ static uint8_t last_chassis_power = 1;
+ uint8_t chassis_power = Chassis_CheckPower();
+ if (chassis_power != last_chassis_power)
+ {
+     last_chassis_power = chassis_power;
+     if (chassis_power)
+         Transmit_to_PC((uint8_t *)"CHASSIS_ON\n", 11);
+     else
+         Transmit_to_PC((uint8_t *)"CHASSIS_OFF\n", 12);
+ }
+ if (!chassis_power)
+ {
+     Chassis_SetSpeed(0, 0, 0);
+     return;
+ }
+
  static car_motion_t last_motion = CAR_STOP;
  static uint16_t  last_data=0;
 if ( usb_pc_run(&current_command))

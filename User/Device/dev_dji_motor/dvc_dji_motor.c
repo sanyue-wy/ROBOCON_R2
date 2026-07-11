@@ -55,6 +55,7 @@ void DJ_CAN_Callback(CAN_RxHeaderTypeDef *pHeader, uint8_t *pBuf)
             Motors[i]->speed = (uint16_t)(pBuf[2] << 8 | pBuf[3]);
             Motors[i]->current = (uint16_t)(pBuf[4] << 8 | pBuf[5]);
 
+            Motors[i]->no_rx_count = 0; // 收到CAN帧，清零超时计数
 
             if (Motors[i]->angle - Motors[i]->last_angle > 4096)
             {
@@ -125,6 +126,7 @@ void DJ_Init(DJ_Motor_t *motor, uint8_t Motor_ID, DJ_MotorType_e Motor_Type, DJ_
     motor->round_count = 0;
     Motors[Motor_ID - 1] = motor;
     motor->offset_angle = motor->last_angle; // 获取偏移角度
+    motor->no_rx_count = 0;
 }
 
 
@@ -140,6 +142,9 @@ void DJ_MotorRun(void)
         // 跳过未初始化或未注册的电机
         if (Motors[i] == NULL || !Motors[i]->initialized)
             continue;
+
+        if (Motors[i]->no_rx_count < 65535)
+            Motors[i]->no_rx_count++;
 
 #if PID
         if (Motors[i]->method == PID_METHOD)

@@ -104,3 +104,19 @@ void Chassis_Speed(float Vx, float Vy, float Vw)
 #endif
 }
 
+/**
+ * 检测底盘是否上电
+ * 通过判断4个底盘电机的CAN反馈是否超时来确定
+ * 返回1=底盘有电, 0=底盘断电
+ */
+uint8_t Chassis_CheckPower(void)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        if (chassis.ChassisMotors[i].initialized &&
+            chassis.ChassisMotors[i].no_rx_count < CHASSIS_POWER_TIMEOUT)
+            return 1;
+    }
+    return 0;
+}
+

@@ -28,6 +28,8 @@
 
 #define DEG2RAD (3.1415926f / 180.0f)
 
+#define CHASSIS_POWER_TIMEOUT  50  // 约300ms无反馈判定断电 (6ms * 50)
+
 typedef enum
 {
     VELOCITY_MODE,
@@ -68,6 +70,8 @@ void Chassis_Speed(float Vx, float Vy, float Vw);
 void Chassis_SetHeadingLock(uint8_t enable);     // 锁定/解锁当前航向
 void Chassis_SetTargetAngle(float angle_deg);    // 旋转到指定绝对角度
 void Chassis_YawControl(void);                   // 航向PID计算（定时器中调用）
+
+uint8_t Chassis_CheckPower(void);                // 检测底盘是否上电，1=有电, 0=断电
 
 
 

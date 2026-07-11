@@ -57,6 +57,7 @@ extern "C"
         uint16_t offset_angle;      // 电机初始偏移角度
         float total_angle;          // 电机总角度
         int16_t round_count;        // 电机圈数
+        volatile uint16_t no_rx_count;  // CAN反馈超时计数，定时器递增，收到反馈清零
 
 #if PID
         PID_t PID_Speed;        // 电机速度环PID
