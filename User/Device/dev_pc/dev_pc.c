@@ -40,7 +40,6 @@ static car_motion_t parse_motion(const char *str)
     if (strncmp(str, "upwd", 4) == 0) return CAR_UP;        //44444为爬楼状态，55555为放物块的
     if (strncmp(str, "dwnd", 4) == 0) return CAR_DOWN;      //44444为爬楼状态，55555为放物块的
     if (strncmp(str, "airb", 4) == 0) return CAR_AIR_BREAK;     // 气路总阀，55555为开启，44444为关闭
-    if (strncmp(str, "dofs", 4) == 0) return CAR_DOFS;     //
     if (strncmp(str, "doft", 4) == 0) return CAR_DOFT;     //0——360映射到-180到180
     if (strncmp(str, "suck", 4) == 0) return CAR_SUCK;     //吸盘吸取物块  后面五位数据给55555为吸住，给44444为放下
     if (strncmp(str, "taup", 4) == 0) return CAR_TABLE_UP;    //升降台  后面数据为上升距离 单位mm

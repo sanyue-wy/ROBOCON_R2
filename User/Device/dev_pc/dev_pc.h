@@ -23,7 +23,6 @@ typedef enum {
     CAR_UP,
     CAR_DOWN,
     CAR_AIR_BREAK, //这三个自由度
-    CAR_DOFS,
     CAR_DOFT,
     CAR_SUCK,
     CAR_TABLE_UP,

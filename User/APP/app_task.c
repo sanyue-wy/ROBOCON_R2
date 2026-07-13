@@ -91,7 +91,7 @@ if ( usb_pc_run(&current_command))
   last_motion = current_command.motion;
   flag_send = true;
  }
- else (current_command.data != last_data);
+ else if (current_command.data != last_data)
  {
   last_data = current_command.data;
   flag_send = true;
@@ -223,15 +223,15 @@ if ( usb_pc_run(&current_command))
    }
   }
   break;
- case CAR_DOFS:
-  dev_3dof_sc_angle(&sc_motor[1], current_command.data);
-  if (flag_send)
-  {
-   flag_send = false;
-   Transmit_to_PC((uint8_t *)"dofs set\n", 10);
-
-  }
-  break;
+ // case CAR_DOFS:
+ //  dev_3dof_sc_angle(&sc_motor[1], current_command.data);
+ //  if (flag_send)
+ //  {
+ //   flag_send = false;
+ //   Transmit_to_PC((uint8_t *)"dofs set\n", 10);
+ //
+ //  }
+ //  break;
  case CAR_DOFT:
   dev_3dof_sc_angle(&sc_motor[2], 180-current_command.data);
   if (flag_send)
